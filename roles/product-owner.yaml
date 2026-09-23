@@ -1,0 +1,13 @@
+id: product-owner
+label: Product Owner
+accent: "#f59e0b"
+headline: Product owner with an engineer's eye for what's actually shippable.
+summary: >
+  I turn fuzzy goals into a prioritised backlog, write stories engineers can
+  build from, and use data and customer conversations to decide what not to
+  build. Years in QA and delivery taught me where products really break.
+skills_highlight: [backlog-management, discovery, stakeholder-management, agile, metrics, user-stories]
+content_priority: [project, post, debug, til]
+hide_types: []
+resume_pdf: ""
+cta: Open to Product Owner and Technical PO roles

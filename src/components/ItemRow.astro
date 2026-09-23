@@ -1,0 +1,15 @@
+---
+import { itemUrl, fmtDate, TYPE_META, safeText, type Item, type View } from '../lib/site';
+interface Props { item: Item; view: View }
+const { item, view } = Astro.props;
+const d = item.data;
+const meta = TYPE_META[d.type];
+---
+<a class="row" href={itemUrl(item, view)} data-tags={d.tags.join(' ')}>
+  <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
+  <div>
+    <h3>{safeText(d.title, d)}</h3>
+    <p>{safeText(d.summary, d)}</p>
+  </div>
+  <span class="type">{meta.icon} {meta.label}</span>
+</a>

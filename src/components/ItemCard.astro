@@ -1,0 +1,21 @@
+---
+import { itemUrl, fmtDate, TYPE_META, prettyTag, safeText, displayCompany, type Item, type View } from '../lib/site';
+interface Props { item: Item; view: View; featured?: boolean }
+const { item, view, featured } = Astro.props;
+const d = item.data;
+const meta = TYPE_META[d.type];
+const company = displayCompany(d);
+---
+<a class:list={['card', { featured }]} href={itemUrl(item, view)} data-tags={d.tags.join(' ')}>
+  <div class="card-top">
+    <span class="type">{meta.icon} {meta.label}</span>
+    <time datetime={d.date.toISOString()}>{fmtDate(d.date, 'short')}</time>
+  </div>
+  <h3>{safeText(d.title, d)}</h3>
+  <p>{safeText(d.summary, d)}</p>
+  {d.impact && <span class="impact">{safeText(d.impact, d)}</span>}
+  <div class="card-foot">
+    {company && <span class="tag">@ {company}</span>}
+    {(d.stack.length ? d.stack : d.tags).slice(0, 4).map((t) => <span class="tag">{prettyTag(t)}</span>)}
+  </div>
+</a>

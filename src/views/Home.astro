@@ -1,0 +1,148 @@
+---
+import ItemCard from '../components/ItemCard.astro';
+import ItemRow from '../components/ItemRow.astro';
+import {
+  cfg, u, viewUrl, itemsFor, featuredFor, experienceFor, displayCompany, fmtDate,
+  yearsOfExperience, prettyTag, TYPE_META, type View, type ItemType,
+} from '../lib/site';
+
+interface Props { view: View }
+const { view } = Astro.props;
+const role = view.role;
+
+const all = await itemsFor(role);
+const featured = await featuredFor(role, 3);
+const featuredIds = new Set(featured.map((f) => f.id));
+const jobs = await experienceFor(role);
+const years = yearsOfExperience();
+
+const count = (t: ItemType) => all.filter((i) => i.data.type === t).length;
+const stats = [
+  years ? { n: `${years}+`, l: 'years in software' } : null,
+  { n: count('project'), l: 'projects shipped' },
+  { n: count('debug'), l: 'debug stories' },
+  { n: count('post') + count('til'), l: 'articles & learnings' },
+].filter(Boolean) as { n: string | number; l: string }[];
+
+// Skills → how many items back each one up
+const skills = role.skills_highlight.map((s) => ({
+  s,
+  n: all.filter((i) => i.data.tags.includes(s) || i.data.stack.map((x) => x.toLowerCase()).includes(s)).length,
+}));
+
+// Sections in the order this persona prefers; posts + TIL share "Writing"
+const seen = new Set<string>();
+const sections = role.content_priority
+  .map((t) => (t === 'til' ? 'post' : t))
+  .filter((t) => !seen.has(t) && seen.add(t))
+  .map((t) => {
+    const types: ItemType[] = t === 'post' ? ['post', 'til'] : [t as ItemType];
+    const items = all.filter((i) => types.includes(i.data.type) && !featuredIds.has(i.id)).slice(0, t === 'post' ? 5 : 3);
+    const meta = TYPE_META[t as ItemType];
+    return { t, items, title: t === 'post' ? 'Writing & learnings' : meta.plural, section: meta.section };
+  })
+  .filter((s) => s.items.length);
+
+const email = cfg.email ? `mailto:${cfg.email}` : undefined;
+const [first, ...rest] = role.headline.split(' ');
+---
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="hero-meta">
+        <span class="pill"><span class="dot"></span> {role.label}</span>
+        {cfg.availability && <span class="pill status"><span class="dot"></span>{cfg.availability}</span>}
+        {cfg.location && <span class="pill">📍 {cfg.location}</span>}
+      </div>
+      <h1><span class="hl">{first}</span> {rest.join(' ')}</h1>
+      <p class="lead">{role.summary}</p>
+      <div class="btn-row">
+        <a class="btn primary" href={viewUrl(view, 'resume')}>View {role.label} resume →</a>
+        {email && <a class="btn" href={email}>Get in touch</a>}
+        <a class="btn" href={viewUrl(view, 'journey')}>My journey</a>
+      </div>
+    </div>
+    {cfg.avatar && <img class="avatar" src={u(cfg.avatar)} alt={cfg.name} width="220" height="220" />}
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="stats">
+    {stats.map((s) => <div class="stat"><b>{s.n}</b><span>{s.l}</span></div>)}
+  </div>
+</div>
+
+{featured.length > 0 && (
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Start here</span><h2>Best of my {role.label} work</h2></div>
+      </div>
+      <div class="grid">
+        {featured.map((i) => <ItemCard item={i} view={view} featured />)}
+      </div>
+    </div>
+  </section>
+)}
+
+{skills.length > 0 && (
+  <section class="section" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Toolkit</span><h2>Skills, with receipts</h2></div>
+      </div>
+      <div class="skills">
+        {skills.map(({ s, n }) => (
+          <span class="skill">{prettyTag(s)}{n > 0 && <small>{n} {n === 1 ? 'story' : 'stories'}</small>}</span>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+{sections.map((sec) => (
+  <section class="section" style="padding-top:8px">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">{TYPE_META[sec.t as ItemType].icon} Latest</span><h2>{sec.title}</h2></div>
+        <a href={viewUrl(view, sec.section)}>See all →</a>
+      </div>
+      {sec.t === 'post'
+        ? <div class="rows">{sec.items.map((i) => <ItemRow item={i} view={view} />)}</div>
+        : <div class="grid">{sec.items.map((i) => <ItemCard item={i} view={view} />)}</div>}
+    </div>
+  </section>
+))}
+
+{jobs.length > 0 && (
+  <section class="section" style="padding-top:8px">
+    <div class="wrap">
+      <div class="section-head">
+        <div><span class="eyebrow">Journey</span><h2>Where I've been</h2></div>
+        <a href={viewUrl(view, 'journey')}>Full timeline →</a>
+      </div>
+      <div class="rows">
+        {jobs.slice(0, 4).map((j) => (
+          <a class="row" href={viewUrl(view, 'journey') + '#' + j.id}>
+            <time>{fmtDate(j.data.start, 'short')}</time>
+            <div><h3>{j.data.title}</h3><p>{displayCompany(j.data)}{j.data.location && ` · ${j.data.location}`}</p></div>
+            <span class="tag">{j.data.end ? fmtDate(j.data.end, 'short') : 'Present'}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<div class="wrap">
+  <div class="cta-band">
+    <div>
+      <h2>{role.cta || 'Let’s talk'}</h2>
+      <p>Happy to chat about roles, projects, or a tricky bug you’re chasing.</p>
+    </div>
+    <div class="btn-row">
+      {email && <a class="btn primary" href={email}>Email me</a>}
+      {cfg.links.slice(0, 2).map((l: any) => <a class="btn" href={l.url} target="_blank" rel="noopener">{l.label}</a>)}
+    </div>
+  </div>
+</div>

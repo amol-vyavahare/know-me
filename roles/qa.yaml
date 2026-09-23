@@ -1,0 +1,14 @@
+id: qa
+label: QA / SDET
+accent: "#22c55e"            # role colour used across the site
+headline: Quality engineer who automates the boring and hunts the flaky.
+summary: >
+  I design test strategies, build automation frameworks that teams actually
+  trust, and chase intermittent failures down to their root cause. I care about
+  fast feedback, clear bug reports and shipping with confidence.
+skills_highlight: [test-strategy, playwright, selenium, api-testing, performance-testing, ci-cd]
+# Order of sections on the home page. Types: debug | project | post | til
+content_priority: [debug, project, post, til]
+hide_types: []
+resume_pdf: ""               # e.g. /resumes/qa.pdf — blank = "Print / Save as PDF"
+cta: Open to SDET and QA Lead roles

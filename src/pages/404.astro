@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import { allViews, u } from '../lib/site';
+const view = allViews()[0];
+---
+<Base view={view} title="Not found" path="">
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">404 · Page not found</span>
+      <h1><span class="hl">Hmm.</span> That page wandered off.</h1>
+      <p class="lead">It may have moved, or the link had a typo. Classic off-by-one.</p>
+      <a class="btn primary" href={u('')}>Back home</a>
+    </div>
+  </section>
+</Base>

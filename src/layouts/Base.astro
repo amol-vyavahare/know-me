@@ -1,0 +1,119 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import { cfg, switchableRoles, activeRole, u, type View } from '../lib/site';
+
+interface Props {
+  view: View;
+  title?: string;
+  description?: string;
+  /** path inside the view, e.g. '' | 'projects/' | 'p/debug/x/' — used for nav + persona switch */
+  path: string;
+  /** canonical, role-free path for SEO (defaults to path) */
+  canonicalPath?: string;
+}
+const { view, title, description, path, canonicalPath } = Astro.props;
+const role = view.role;
+const pageTitle = title ? `${title} · ${cfg.name}` : `${cfg.name} — ${role.label}`;
+const desc = description ?? role.headline;
+const canonical = new URL(u(canonicalPath ?? path), Astro.site);
+
+const nav = [
+  { label: 'Projects', section: 'projects' },
+  { label: 'Debug Diary', section: 'debug', type: 'debug' },
+  { label: 'Blog', section: 'blog' },
+  { label: 'Journey', section: 'journey' },
+  { label: 'Resume', section: 'resume' },
+  { label: 'About', section: 'about' },
+].filter((n) => !n.type || !role.hide_types.includes(n.type as any));
+
+const current = path.split('/')[0];
+const initials = cfg.name.split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('');
+---
+<!doctype html>
+<html lang="en" style={`--accent:${role.accent}`}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{pageTitle}</title>
+  <meta name="description" content={desc} />
+  <link rel="canonical" href={canonical} />
+  <meta property="og:title" content={pageTitle} />
+  <meta property="og:description" content={desc} />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonical} />
+  <meta name="theme-color" content={role.accent} />
+  <link rel="icon" href={u('favicon.svg')} type="image/svg+xml" />
+  <script is:inline>
+    try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href={u(view.prefix)}>
+        <span class="brand-mark">{initials}</span>
+        <span class="brand-name">{cfg.name}</span>
+      </a>
+      <nav class="nav" id="nav" aria-label="Main">
+        {nav.map((n) => (
+          <a href={u(view.prefix + n.section + '/')} aria-current={current === n.section ? 'page' : undefined}>{n.label}</a>
+        ))}
+      </nav>
+      <div class="header-tools">
+        <details class="persona">
+          <summary title="Switch the persona this site is tailored to">
+            <span class="dot"></span><span class="persona-label">{role.label}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="persona-menu">
+            <div class="hint">View this site as</div>
+            {switchableRoles.map((r) => (
+              <a href={u(`r/${r.id}/` + path)} aria-current={r.id === role.id ? 'true' : undefined} style={`--accent:${r.accent}`}>
+                <span class="dot"></span>{r.label}
+                {r.id === activeRole.id && <small>default</small>}
+              </a>
+            ))}
+          </div>
+        </details>
+        <button class="icon-btn" id="theme" aria-label="Toggle light/dark theme">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+        <button class="icon-btn menu-toggle" id="menu" aria-label="Menu" aria-controls="nav" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main><slot /></main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>© {new Date().getFullYear()} {cfg.name} · Viewing as <b style="color:var(--accent)">{role.label}</b></span>
+      <span>
+        {cfg.links.map((l: any) => <a href={l.url} rel="me noopener" target="_blank">{l.label}</a>)}
+      </span>
+    </div>
+  </footer>
+
+  <script is:inline>
+    document.getElementById('theme')?.addEventListener('click', () => {
+      const root = document.documentElement;
+      const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = dark ? 'light' : 'dark';
+      try { localStorage.setItem('theme', root.dataset.theme); } catch {}
+    });
+    const menu = document.getElementById('menu'), nav = document.getElementById('nav');
+    menu?.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      menu.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('details.persona[open]').forEach((d) => { if (!d.contains(e.target)) d.removeAttribute('open'); });
+    });
+  </script>
+</body>
+</html>

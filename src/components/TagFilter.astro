@@ -1,0 +1,28 @@
+---
+import { prettyTag, type Item } from '../lib/site';
+interface Props { items: Item[]; target: string }
+const { items, target } = Astro.props;
+const counts = new Map<string, number>();
+for (const i of items) for (const t of i.data.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 16);
+---
+{tags.length > 1 && (
+  <div class="filters" data-filter-for={target} role="group" aria-label="Filter by tag">
+    <button class="tag" aria-pressed="true" data-tag="">All</button>
+    {tags.map(([t, n]) => <button class="tag" aria-pressed="false" data-tag={t}>{prettyTag(t)} · {n}</button>)}
+  </div>
+)}
+<script is:inline>
+  document.querySelectorAll('[data-filter-for]').forEach((bar) => {
+    if (bar.dataset.bound) return; bar.dataset.bound = '1';
+    bar.addEventListener('click', (e) => {
+      const list = document.querySelector(bar.dataset.filterFor);
+      const btn = e.target.closest('button'); if (!btn) return;
+      bar.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      const tag = btn.dataset.tag;
+      list.querySelectorAll('[data-tags]').forEach((el) => {
+        el.dataset.hidden = String(!!tag && !el.dataset.tags.split(' ').includes(tag));
+      });
+    });
+  });
+</script>

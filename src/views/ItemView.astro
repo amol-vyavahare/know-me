@@ -1,0 +1,86 @@
+---
+import { render } from 'astro:content';
+import ItemCard from '../components/ItemCard.astro';
+import {
+  fmtDate, readingMinutes, TYPE_META, prettyTag, displayCompany, safeText, viewUrl, itemsFor, switchableRoles,
+  type Item, type View,
+} from '../lib/site';
+
+interface Props { view: View; item: Item }
+const { view, item } = Astro.props;
+const d = item.data;
+const meta = TYPE_META[d.type];
+const { Content, headings } = await render(item);
+const toc = headings.filter((h) => h.depth === 2);
+const company = displayCompany(d);
+
+const pool = (await itemsFor(view.role)).filter((i) => i.id !== item.id);
+const related = pool
+  .map((i) => ({ i, score: i.data.tags.filter((t) => d.tags.includes(t)).length + (i.data.type === d.type ? 0.5 : 0) }))
+  .filter((r) => r.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3)
+  .map((r) => r.i);
+
+const roleLabels = d.roles.includes('all')
+  ? ['All roles']
+  : switchableRoles.filter((r) => d.roles.includes(r.id)).map((r) => r.label);
+
+const facts = [
+  company && ['Company', company],
+  d.my_role && ['My role', d.my_role],
+  d.duration && ['Duration', d.duration],
+  d.stack.length && ['Stack', d.stack.join(', ')],
+  roleLabels.length && ['Relevant for', roleLabels.join(', ')],
+].filter(Boolean) as [string, string][];
+---
+<div class="wrap">
+  <header class="article-head">
+    <a class="type" href={viewUrl(view, meta.section)} style="text-decoration:none">← {meta.icon} {meta.plural}</a>
+    <h1>{safeText(d.title, d)}</h1>
+    <p class="summary">{safeText(d.summary, d)}</p>
+    <div class="meta">
+      <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
+      {d.updated && <span>updated {fmtDate(d.updated)}</span>}
+      <span>{readingMinutes(item.body)} min read</span>
+      {d.impact && <span class="impact" style="font-family:var(--font-sans)">{safeText(d.impact, d)}</span>}
+    </div>
+  </header>
+
+  <div class="article-layout">
+    <article class:list={['prose', { debug: d.type === 'debug' }]}>
+      <Content />
+      {d.tags.length > 0 && (
+        <div class="card-foot" style="margin-top:32px">{d.tags.map((t) => <span class="tag">#{prettyTag(t)}</span>)}</div>
+      )}
+    </article>
+
+    <aside class="article-aside">
+      {facts.length > 0 && (
+        <div class="aside-box">
+          <h4>At a glance</h4>
+          <dl>{facts.map(([k, v]) => <><dt>{k}</dt><dd>{v}</dd></>)}</dl>
+          {(d.repo || d.demo) && (
+            <div class="btn-row" style="margin-top:14px">
+              {d.repo && <a class="btn" href={d.repo} target="_blank" rel="noopener">Code</a>}
+              {d.demo && <a class="btn primary" href={d.demo} target="_blank" rel="noopener">Live demo</a>}
+            </div>
+          )}
+        </div>
+      )}
+      {toc.length > 1 && (
+        <nav class="aside-box toc" aria-label="On this page">
+          <h4>On this page</h4>
+          {toc.map((h) => <a href={`#${h.slug}`}>{h.text}</a>)}
+        </nav>
+      )}
+    </aside>
+  </div>
+
+  {related.length > 0 && (
+    <section class="section">
+      <div class="section-head"><div><span class="eyebrow">Keep reading</span><h2>Related in {view.role.label}</h2></div></div>
+      <div class="grid">{related.map((r) => <ItemCard item={r} view={view} />)}</div>
+    </section>
+  )}
+</div>

@@ -1,0 +1,13 @@
+id: devops
+label: DevOps / Platform
+accent: "#38bdf8"
+headline: Platform engineer who makes shipping boring, fast and safe.
+summary: >
+  I build CI/CD pipelines, infrastructure as code and observability that let
+  teams deploy many times a day without fear. I like measurable wins: shorter
+  build times, fewer pages, cheaper clusters.
+skills_highlight: [ci-cd, kubernetes, terraform, aws, observability, docker]
+content_priority: [project, debug, post, til]
+hide_types: []
+resume_pdf: ""
+cta: Open to DevOps, SRE and Platform roles
