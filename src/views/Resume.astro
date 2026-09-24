@@ -1,11 +1,12 @@
 ---
-import { cfg, u, experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, type View } from '../lib/site';
+import { cfg, u, experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, skillId, skillUrl, skillCatalog, type View } from '../lib/site';
 
 interface Props { view: View }
 const { view } = Astro.props;
 const role = view.role;
 const jobs = await experienceFor(role);
 const projects = (await itemsFor(role, 'project')).slice(0, 4);
+const catalog = await skillCatalog();
 const site = new URL(u(view.prefix), Astro.site).toString().replace(/^https?:\/\//, '');
 ---
 <div class="wrap">
@@ -33,7 +34,10 @@ const site = new URL(u(view.prefix), Astro.site).toString().replace(/^https?:\/\
 
     {role.skills_highlight.length > 0 && (<>
       <h2>Core skills</h2>
-      <p style="margin:0">{role.skills_highlight.map(prettyTag).join(' · ')}</p>
+      <p style="margin:0">{role.skills_highlight.map((s, n) => {
+        const id = skillId(s);
+        return <>{n > 0 && ' · '}{id && catalog.has(id) ? <a href={skillUrl(id, view)} style="text-decoration:none">{prettyTag(s)}</a> : prettyTag(s)}</>;
+      })}</p>
     </>)}
 
     {jobs.length > 0 && (<>

@@ -38,6 +38,14 @@ export function loadRoles() {
   return roles;
 }
 
+/** skills.yaml is optional — without it every tag/stack entry is its own skill. */
+export function loadSkills() {
+  const file = path.join(root, 'skills.yaml');
+  if (!fs.existsSync(file)) return { skills: {}, not_skills: [] };
+  const raw = yamlLoad(fs.readFileSync(file, 'utf8')) ?? {};
+  return { skills: raw.skills ?? {}, not_skills: raw.not_skills ?? [] };
+}
+
 /** Replace the real company name with its alias (case-insensitive, whole phrase). */
 export function maskText(text, company, alias) {
   if (!company || !text) return text;

@@ -1,0 +1,47 @@
+---
+import { skillsFor, skillCategories, skillUrl, skillId, type View, type Skill } from '../lib/site';
+
+interface Props { view: View }
+const { view } = Astro.props;
+const role = view.role;
+
+const skills = (await skillsFor(role)).filter((s) => s.items.length || s.jobs.length);
+const core = new Set(role.id === 'all' ? [] : role.skills_highlight.map(skillId));
+const groups = skillCategories
+  .map((c) => ({ c, list: skills.filter((s) => s.category === c) }))
+  .filter((g) => g.list.length);
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const breakdown = (s: Skill) =>
+  [s.items.length && plural(s.items.length, 'write-up', 'write-ups'), s.jobs.length && plural(s.jobs.length, 'role', 'roles')]
+    .filter(Boolean).join(' · ');
+---
+<div class="wrap">
+  <header class="page-head">
+    <span class="eyebrow">✚ Skills</span>
+    <h1>What I work with</h1>
+    <p>
+      Every skill here is backed by real work. Pick one to see the projects, debug stories, articles and TIL notes behind it
+      {role.id !== 'all' && <> — shown through a {role.label} lens</>}.
+    </p>
+  </header>
+
+  {skills.length === 0 && <p class="muted">No skills tagged in the {role.label} view yet.</p>}
+
+  {core.size > 0 && <p class="skill-legend"><span class="skill core">Core</span> skills for the {role.label} role</p>}
+
+  <div class="skill-groups">
+    {groups.map((g) => (
+      <section>
+        <h2 class="eyebrow">{g.c}</h2>
+        <div class="skills">
+          {g.list.map((s) => (
+            <a class:list={['skill', { core: core.has(s.id) }]} href={skillUrl(s.id, view)} title={breakdown(s)}>
+              {s.label}<small>{s.items.length + s.jobs.length}</small>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</div>

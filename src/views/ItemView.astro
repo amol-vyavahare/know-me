@@ -2,7 +2,7 @@
 import { render } from 'astro:content';
 import ItemCard from '../components/ItemCard.astro';
 import {
-  fmtDate, readingMinutes, TYPE_META, prettyTag, displayCompany, safeText, viewUrl, itemsFor, switchableRoles,
+  fmtDate, readingMinutes, TYPE_META, prettyTag, displayCompany, safeText, viewUrl, itemsFor, switchableRoles, skillId, skillUrl,
   type Item, type View,
 } from '../lib/site';
 
@@ -30,9 +30,9 @@ const facts = [
   company && ['Company', company],
   d.my_role && ['My role', d.my_role],
   d.duration && ['Duration', d.duration],
-  d.stack.length && ['Stack', d.stack.join(', ')],
+  d.stack.length && ['Stack', d.stack],
   roleLabels.length && ['Relevant for', roleLabels.join(', ')],
-].filter(Boolean) as [string, string][];
+].filter(Boolean) as [string, string | string[]][];
 ---
 <div class="wrap">
   <header class="article-head">
@@ -51,7 +51,10 @@ const facts = [
     <article class:list={['prose', { debug: d.type === 'debug' }]}>
       <Content />
       {d.tags.length > 0 && (
-        <div class="card-foot" style="margin-top:32px">{d.tags.map((t) => <span class="tag">#{prettyTag(t)}</span>)}</div>
+        <div class="card-foot" style="margin-top:32px">{d.tags.map((t) => {
+          const s = skillId(t);
+          return s ? <a class="tag" href={skillUrl(s, view)}>#{prettyTag(t)}</a> : <span class="tag">#{prettyTag(t)}</span>;
+        })}</div>
       )}
     </article>
 
@@ -59,7 +62,9 @@ const facts = [
       {facts.length > 0 && (
         <div class="aside-box">
           <h4>At a glance</h4>
-          <dl>{facts.map(([k, v]) => <><dt>{k}</dt><dd>{v}</dd></>)}</dl>
+          <dl>{facts.map(([k, v]) => <><dt>{k}</dt><dd>{Array.isArray(v)
+            ? v.map((s, n) => { const id = skillId(s); return <>{n > 0 && ', '}{id ? <a href={skillUrl(id, view)}>{s}</a> : s}</>; })
+            : v}</dd></>)}</dl>
           {(d.repo || d.demo) && (
             <div class="btn-row" style="margin-top:14px">
               {d.repo && <a class="btn" href={d.repo} target="_blank" rel="noopener">Code</a>}

@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────
+#  Skills registry — powers /skills/ and /skills/<skill>/
+#
+#  Skills are collected automatically from:
+#    • `tags:`  and `stack:` on posts, projects, debug entries and TILs
+#    • `skills:` on experience files
+#  Spelling doesn't matter: "Terraform", "terraform" and "TERRAFORM"
+#  all become the skill `terraform`.
+#
+#  You only need this file to:
+#    label     → change how a skill is displayed      (ci-cd → "CI/CD")
+#    category  → group it on the Skills page         (default: Other)
+#    aliases   → other names for the SAME thing      (k8s → kubernetes)
+#  Categories are shown in the order they first appear below.
+# ─────────────────────────────────────────────────────────────
+
+skills:
+  # ── Testing & quality ─────────────────────────────────────
+  test-strategy:        { category: Testing & quality }
+  playwright:           { category: Testing & quality }
+  selenium:             { category: Testing & quality, aliases: [selenium-webdriver] }
+  api-testing:          { label: API testing, category: Testing & quality }
+  pytest:               { category: Testing & quality }
+  openapi:              { label: OpenAPI, category: Testing & quality, aliases: [swagger] }
+  manual-testing:       { category: Testing & quality }
+  boundary-testing:     { category: Testing & quality }
+  performance-testing:  { category: Testing & quality, aliases: [load-testing] }
+  debugging:            { category: Testing & quality }
+
+  # ── Cloud & DevOps ────────────────────────────────────────
+  ci-cd:                { label: CI/CD, category: Cloud & DevOps }
+  github-actions:       { label: GitHub Actions, category: Cloud & DevOps, aliases: [gh-actions] }
+  docker:               { category: Cloud & DevOps, aliases: [docker-buildkit] }
+  kubernetes:           { category: Cloud & DevOps, aliases: [k8s, eks, kubectl] }
+  helm:                 { category: Cloud & DevOps }
+  argo-cd:              { label: Argo CD, category: Cloud & DevOps, aliases: [argocd] }
+  terraform:            { category: Cloud & DevOps }
+  aws:                  { label: AWS, category: Cloud & DevOps, aliases: [amazon-web-services] }
+  observability:        { category: Cloud & DevOps }
+  grafana:              { category: Cloud & DevOps }
+  linux:                { category: Cloud & DevOps }
+  gradle:               { category: Cloud & DevOps }
+  git:                  { category: Cloud & DevOps }
+
+  # ── Product ───────────────────────────────────────────────
+  backlog-management:   { category: Product }
+  discovery:            { label: Product discovery, category: Product }
+  user-stories:         { category: Product }
+  stakeholder-management: { category: Product }
+  agile:                { category: Product, aliases: [scrum] }
+  metrics:              { label: Product metrics, category: Product }
+  mixpanel:             { category: Product }
+  hotjar:               { category: Product }
+  miro:                 { category: Product }
+  jira:                 { category: Product, aliases: [jira-api] }
+
+  # ── Data & languages ──────────────────────────────────────
+  sql:                  { label: SQL, category: Data & languages }
+  bigquery:             { label: BigQuery, category: Data & languages }
+  python:               { category: Data & languages }
+
+# Tags that are useful for filtering but are not skills —
+# they never get a skill page.
+not_skills: [career, timezones, flaky-tests]

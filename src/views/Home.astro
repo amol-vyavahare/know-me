@@ -3,7 +3,7 @@ import ItemCard from '../components/ItemCard.astro';
 import ItemRow from '../components/ItemRow.astro';
 import {
   cfg, u, viewUrl, itemsFor, featuredFor, experienceFor, displayCompany, fmtDate,
-  yearsOfExperience, prettyTag, TYPE_META, type View, type ItemType,
+  yearsOfExperience, prettyTag, TYPE_META, skillsFor, skillId, skillUrl, type View, type ItemType,
 } from '../lib/site';
 
 interface Props { view: View }
@@ -24,11 +24,12 @@ const stats = [
   { n: count('post') + count('til'), l: 'articles & learnings' },
 ].filter(Boolean) as { n: string | number; l: string }[];
 
-// Skills → how many items back each one up
-const skills = role.skills_highlight.map((s) => ({
-  s,
-  n: all.filter((i) => i.data.tags.includes(s) || i.data.stack.map((x) => x.toLowerCase()).includes(s)).length,
-}));
+// Skills → how many items back each one up (same matching as the Skills pages)
+const roleSkills = new Map((await skillsFor(role)).map((s) => [s.id, s]));
+const skills = role.skills_highlight.map((s) => {
+  const found = roleSkills.get(skillId(s) ?? '');
+  return { s, label: found?.label ?? prettyTag(s), n: found?.items.length ?? 0, href: found && skillUrl(found.id, view) };
+});
 
 // Sections in the order this persona prefers; posts + TIL share "Writing"
 const seen = new Set<string>();
@@ -90,11 +91,13 @@ const [first, ...rest] = role.headline.split(' ');
     <div class="wrap">
       <div class="section-head">
         <div><span class="eyebrow">Toolkit</span><h2>Skills, with receipts</h2></div>
+        <a href={viewUrl(view, 'skills')}>All skills →</a>
       </div>
       <div class="skills">
-        {skills.map(({ s, n }) => (
-          <span class="skill">{prettyTag(s)}{n > 0 && <small>{n} {n === 1 ? 'story' : 'stories'}</small>}</span>
-        ))}
+        {skills.map(({ label, n, href }) => {
+          const inner = <>{label}{n > 0 && <small>{n} {n === 1 ? 'story' : 'stories'}</small>}</>;
+          return href ? <a class="skill" href={href}>{inner}</a> : <span class="skill">{inner}</span>;
+        })}
       </div>
     </div>
   </section>

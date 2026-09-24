@@ -1,6 +1,6 @@
 ---
 import { render } from 'astro:content';
-import { experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, type View } from '../lib/site';
+import { experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, skillId, skillUrl, type View } from '../lib/site';
 
 interface Props { view: View }
 const { view } = Astro.props;
@@ -33,7 +33,10 @@ const entries = await Promise.all(jobs.map(async (j) => {
           {highlights.length > 0 && <ul>{highlights.map((h) => <li>{h}</li>)}</ul>}
           <div class="prose" style="font-size:15px"><Content /></div>
           {j.data.skills.length > 0 && (
-            <div class="card-foot" style="margin-top:12px">{j.data.skills.map((s) => <span class="tag">{prettyTag(s)}</span>)}</div>
+            <div class="card-foot" style="margin-top:12px">{j.data.skills.map((s) => {
+              const id = skillId(s);
+              return id ? <a class="tag" href={skillUrl(id, view)}>{prettyTag(s)}</a> : <span class="tag">{prettyTag(s)}</span>;
+            })}</div>
           )}
           {written.length > 0 && (
             <div class="tl-written">

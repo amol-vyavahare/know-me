@@ -2,7 +2,8 @@
 /**
  * One route builds every page for every persona:
  *   /                       → active_role home         /r/qa/            → QA home
- *   /projects/ /debug/ /blog/ /journey/ /resume/ /about/  (same under /r/<role>/)
+ *   /projects/ /debug/ /blog/ /skills/ /journey/ /resume/ /about/  (same under /r/<role>/)
+ *   /skills/<skill>/        → everything backing up one skill
  *   /p/<type>/<slug>/       → item page (also /r/<role>/p/...)
  */
 import Base from '../layouts/Base.astro';
@@ -12,15 +13,22 @@ import Journey from '../views/Journey.astro';
 import Resume from '../views/Resume.astro';
 import About from '../views/About.astro';
 import ItemView from '../views/ItemView.astro';
-import { allViews, publicItems, itemPath, safeText, type View, type Item } from '../lib/site';
+import Skills from '../views/Skills.astro';
+import SkillView from '../views/SkillView.astro';
+import {
+  allViews, publicItems, itemPath, safeText, skillCatalog, skillPath, warnSkillProblems, type View, type Item,
+} from '../lib/site';
 
 type Page =
-  | { kind: 'home' | 'projects' | 'debug' | 'blog' | 'journey' | 'resume' | 'about' }
-  | { kind: 'item'; item: Item };
+  | { kind: 'home' | 'projects' | 'debug' | 'blog' | 'skills' | 'journey' | 'resume' | 'about' }
+  | { kind: 'item'; item: Item }
+  | { kind: 'skill'; id: string; label: string };
 
 export async function getStaticPaths() {
   const items = await publicItems();
-  const sections = ['projects', 'debug', 'blog', 'journey', 'resume', 'about'] as const;
+  const skills = [...(await skillCatalog()).values()];
+  await warnSkillProblems();
+  const sections = ['projects', 'debug', 'blog', 'skills', 'journey', 'resume', 'about'] as const;
   const paths = [];
   for (const view of allViews()) {
     const pre = view.prefix.replace(/\/$/, '');
@@ -34,15 +42,23 @@ export async function getStaticPaths() {
       const p = itemPath(item);
       paths.push({ params: { path: join(p.replace(/\/$/, '')) }, props: { view, page: { kind: 'item', item }, sub: p } });
     }
+    // Every skill exists in every view, so the persona switcher never 404s
+    for (const { id, label } of skills) {
+      const p = skillPath(id);
+      paths.push({ params: { path: join(p.replace(/\/$/, '')) }, props: { view, page: { kind: 'skill', id, label }, sub: p } });
+    }
   }
   return paths;
 }
 
 const { view, page, sub } = Astro.props as { view: View; page: Page; sub: string };
 const titles: Record<string, string> = {
-  projects: 'Projects', debug: 'Debug Diary', blog: 'Blog', journey: 'Journey', resume: `Resume — ${view.role.label}`, about: 'About',
+  projects: 'Projects', debug: 'Debug Diary', blog: 'Blog', skills: 'Skills', journey: 'Journey', resume: `Resume — ${view.role.label}`, about: 'About',
 };
-const title = page.kind === 'item' ? safeText(page.item.data.title, page.item.data) : titles[page.kind];
+const title =
+  page.kind === 'item' ? safeText(page.item.data.title, page.item.data)
+  : page.kind === 'skill' ? `${page.label} — Skills`
+  : titles[page.kind];
 const description = page.kind === 'item' ? safeText(page.item.data.summary, page.item.data) : undefined;
 // Item pages are canonical at the role-free URL; section pages at the view's own URL
 const canonicalPath = page.kind === 'item' ? sub : view.prefix + sub;
@@ -50,6 +66,8 @@ const canonicalPath = page.kind === 'item' ? sub : view.prefix + sub;
 <Base view={view} title={title} description={description} path={sub} canonicalPath={canonicalPath}>
   {page.kind === 'home' && <Home view={view} />}
   {(page.kind === 'projects' || page.kind === 'debug' || page.kind === 'blog') && <ListView view={view} kind={page.kind} />}
+  {page.kind === 'skills' && <Skills view={view} />}
+  {page.kind === 'skill' && <SkillView view={view} id={page.id} />}
   {page.kind === 'journey' && <Journey view={view} />}
   {page.kind === 'resume' && <Resume view={view} />}
   {page.kind === 'about' && <About view={view} />}

@@ -1,0 +1,86 @@
+---
+import ItemCard from '../components/ItemCard.astro';
+import ItemRow from '../components/ItemRow.astro';
+import {
+  cfg, skillsFor, skillCatalog, itemSkillIds, skillUrl, viewUrl, displayCompany, fmtDate, TYPE_META, u, skillPath,
+  type View,
+} from '../lib/site';
+
+interface Props { view: View; id: string }
+const { view, id } = Astro.props;
+const role = view.role;
+
+const skill = (await skillsFor(role)).find((s) => s.id === id)!;
+const catalog = await skillCatalog();
+
+// One section per content type, in the order this persona prefers
+const groups = role.content_priority
+  .map((t) => ({ t, meta: TYPE_META[t], items: skill.items.filter((i) => i.data.type === t) }))
+  .filter((g) => g.items.length);
+
+const nouns = {
+  project: ['project', 'projects'], debug: ['debug story', 'debug stories'], post: ['article', 'articles'], til: ['TIL note', 'TIL notes'],
+} as const;
+const summary = [
+  ...groups.map((g) => `${g.items.length} ${nouns[g.t][g.items.length === 1 ? 0 : 1]}`),
+  skill.jobs.length && `used in ${skill.jobs.length} ${skill.jobs.length === 1 ? 'role' : 'roles'}`,
+].filter(Boolean).join(' · ');
+
+// Skills that most often appear alongside this one
+const together = new Map<string, number>();
+for (const i of skill.items) for (const s of itemSkillIds(i)) if (s !== id) together.set(s, (together.get(s) ?? 0) + 1);
+const related = [...together.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10)
+  .map(([s]) => catalog.get(s)!)
+  .filter(Boolean);
+
+const empty = skill.items.length === 0 && skill.jobs.length === 0;
+---
+<div class="wrap">
+  <header class="page-head">
+    <a class="eyebrow" href={viewUrl(view, 'skills')} style="text-decoration:none">← ✚ Skills · {skill.category}</a>
+    <h1>{skill.label}</h1>
+    {!empty && <p>{summary}</p>}
+  </header>
+
+  {empty && (
+    <p class="muted" style="margin-bottom:72px">
+      Nothing about {skill.label} in the {role.label} view yet.
+      {cfg.all_view && role.id !== 'all' && <> <a href={u('r/all/' + skillPath(id))}>See it across all roles →</a></>}
+    </p>
+  )}
+
+  {groups.map((g) => (
+    <section class="section" style="padding-top:8px">
+      <div class="section-head"><div><span class="eyebrow">{g.meta.icon} {g.meta.plural}</span></div></div>
+      {g.t === 'post' || g.t === 'til'
+        ? <div class="rows">{g.items.map((i) => <ItemRow item={i} view={view} />)}</div>
+        : <div class="grid">{g.items.map((i) => <ItemCard item={i} view={view} />)}</div>}
+    </section>
+  ))}
+
+  {skill.jobs.length > 0 && (
+    <section class="section" style="padding-top:8px">
+      <div class="section-head"><div><span class="eyebrow">Journey · where I used it</span></div></div>
+      <div class="rows">
+        {skill.jobs.map((j) => (
+          <a class="row" href={viewUrl(view, 'journey') + '#' + j.id}>
+            <time>{fmtDate(j.data.start, 'short')}</time>
+            <div><h3>{j.data.title}</h3><p>{displayCompany(j.data)}{j.data.location && ` · ${j.data.location}`}</p></div>
+            <span class="tag">{j.data.end ? fmtDate(j.data.end, 'short') : 'Present'}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {related.length > 0 && (
+    <section class="section" style="padding-top:8px">
+      <div class="section-head"><div><span class="eyebrow">Often used with</span></div></div>
+      <div class="skills">
+        {related.map((s) => <a class="skill" href={skillUrl(s.id, view)}>{s.label}</a>)}
+      </div>
+    </section>
+  )}
+</div>

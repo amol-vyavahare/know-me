@@ -254,6 +254,14 @@ button.tag[aria-pressed='true'] { color: #0b0d12; background: var(--accent); bor
   background: var(--surface); font-size: 14px; text-decoration: none;
 }
 .skill small { font: 11px var(--font-mono); color: var(--ink); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 3px 6px; border-radius: 5px; text-transform: none; }
+a.skill { transition: border-color .15s, color .15s; }
+a.skill:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); color: var(--ink); }
+.skill.core { border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.skill-legend { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; margin: 0 0 8px; }
+.skill-legend .skill { padding: 4px 10px; font-size: 12px; }
+.skill-groups { display: grid; gap: 32px; margin: 24px 0 72px; }
+.skill-groups h2 { margin: 0 0 14px; }
+a.tag:hover { color: var(--ink); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
 
 /* CTA band */
 .cta-band {
