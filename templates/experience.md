@@ -11,6 +11,6 @@ skills: []
 summary: ""
 highlights:
   - "Shown for every role"
-  - text: "Shown only on the QA view and QA resume"
-    roles: [qa]
+  - text: "Shown only on this role's view and resume"
+    roles: [__ROLE__]
 ---

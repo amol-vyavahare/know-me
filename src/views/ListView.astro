@@ -2,7 +2,7 @@
 import ItemCard from '../components/ItemCard.astro';
 import ItemRow from '../components/ItemRow.astro';
 import TagFilter from '../components/TagFilter.astro';
-import { itemsFor, type View } from '../lib/site';
+import { itemsFor, t, type View } from '../lib/site';
 
 interface Props { view: View; kind: 'projects' | 'debug' | 'blog' }
 const { view, kind } = Astro.props;
@@ -10,18 +10,15 @@ const role = view.role;
 
 const copy = {
   projects: {
-    eyebrow: '◆ Projects', title: 'Things I built & shipped',
-    lead: `Projects that show how I work as a ${role.label}: the problem, my part, and what changed because of it.`,
+    eyebrow: '◆ Projects', title: t('projects_title', role), lead: t('projects_lead', role),
     types: ['project'] as const,
   },
   debug: {
-    eyebrow: '⌁ Debug Diary', title: 'Bugs I hunted down',
-    lead: 'Real incidents and head-scratchers, written up as symptom → investigation → root cause → fix → lesson.',
+    eyebrow: '⌁ Debug Diary', title: t('debug_title', role), lead: t('debug_lead', role),
     types: ['debug'] as const,
   },
   blog: {
-    eyebrow: '¶ Writing', title: 'Articles & learnings',
-    lead: 'Longer articles plus short “Today I Learned” notes from the day job.',
+    eyebrow: '¶ Writing', title: t('blog_title', role), lead: t('blog_lead', role),
     types: ['post', 'til'] as const,
   },
 }[kind];

@@ -1,5 +1,5 @@
 ---
-import { skillsFor, skillCategories, skillUrl, skillId, type View, type Skill } from '../lib/site';
+import { skillsFor, skillCategories, skillUrl, skillId, t, type View, type Skill } from '../lib/site';
 
 interface Props { view: View }
 const { view } = Astro.props;
@@ -19,11 +19,8 @@ const breakdown = (s: Skill) =>
 <div class="wrap">
   <header class="page-head">
     <span class="eyebrow">✚ Skills</span>
-    <h1>What I work with</h1>
-    <p>
-      Every skill here is backed by real work. Pick one to see the projects, debug stories, articles and TIL notes behind it
-      {role.id !== 'all' && <> — shown through a {role.label} lens</>}.
-    </p>
+    <h1>{t('skills_title', role)}</h1>
+    <p>{t('skills_lead', role)}</p>
   </header>
 
   {skills.length === 0 && <p class="muted">No skills tagged in the {role.label} view yet.</p>}

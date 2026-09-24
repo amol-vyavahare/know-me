@@ -1,5 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { loadSiteConfig, loadRoles, loadSkills, maskText } from './load-config.mjs';
+import { loadSiteConfig, loadRoles, loadSkills, maskText, PROFILE_NAME } from './load-config.mjs';
 
 export const cfg = loadSiteConfig();
 export const roles = loadRoles();
@@ -28,12 +28,14 @@ export interface View {
   isDefault: boolean;
 }
 
+/** The unfiltered /r/all/ view; label, summary and accent can be set via `all_view:` in site.config.yaml. */
+const allCfg = cfg.all_view || {};
 const ALL_ROLE: Role = {
   id: 'all',
-  label: 'Everything',
-  accent: '#a78bfa',
-  headline: cfg.tagline ?? '',
-  summary: 'Every project, debug story and post across all the roles I have played.',
+  label: allCfg.label ?? 'Everything',
+  accent: allCfg.accent ?? '#a78bfa',
+  headline: allCfg.headline ?? cfg.tagline ?? '',
+  summary: allCfg.summary ?? 'Every project, debug story and post, across every role.',
   skills_highlight: [...new Set(Object.values(roles).flatMap((r: any) => r.skills_highlight))].slice(0, 10) as string[],
   content_priority: ['project', 'debug', 'post', 'til'],
   hide_types: [],
@@ -44,11 +46,51 @@ const ALL_ROLE: Role = {
 export function getRole(id: string): Role {
   if (id === 'all') return ALL_ROLE;
   const r = roles[id];
-  if (!r) throw new Error(`site.config.yaml refers to role "${id}" but roles/${id}.yaml does not exist`);
+  if (!r) throw new Error(`${PROFILE_NAME}/site.config.yaml refers to role "${id}" but ${PROFILE_NAME}/roles/${id}.yaml does not exist`);
   return r as Role;
 }
 
 export const activeRole = getRole(cfg.active_role);
+
+/** "Jane Doe" → "JD" — used by the header mark and the generated favicon. */
+export const initials = String(cfg.name ?? '')
+  .split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '•';
+
+// ── Page text ───────────────────────────────────────────────
+// Every heading/blurb the engine writes itself. Override any of them under
+// `text:` in site.config.yaml. {role} → persona label, {name} → your name.
+const TEXT_DEFAULTS = {
+  home_featured_title: 'Best of my {role} work',
+  home_skills_title: 'Skills, with receipts',
+  home_writing_title: 'Writing & learnings',
+  home_journey_title: "Where I've been",
+  home_cta_title: 'Let’s talk',
+  home_cta_text: 'Happy to chat about roles, projects, or a tricky bug you’re chasing.',
+  projects_title: 'Things I built & shipped',
+  projects_lead: 'Projects that show how I work as a {role}: the problem, my part, and what changed because of it.',
+  debug_title: 'Bugs I hunted down',
+  debug_lead: 'Real incidents and head-scratchers, written up as symptom → investigation → root cause → fix → lesson.',
+  blog_title: 'Articles & learnings',
+  blog_lead: 'Longer articles plus short “Today I Learned” notes from the day job.',
+  skills_title: 'What I work with',
+  skills_lead: 'Every skill here is backed by real work. Pick one to see the projects, debug stories, articles and TIL notes behind it.',
+  journey_title: 'The long road so far',
+  journey_lead: 'Every role, what I owned there, and what I wrote about along the way — shown through a {role} lens.',
+  about_title: "Hi, I'm {name}",
+  not_found_title: 'Hmm. That page wandered off.',
+  not_found_lead: 'It may have moved, or the link had a typo. Classic off-by-one.',
+};
+export type TextKey = keyof typeof TEXT_DEFAULTS;
+
+for (const k of Object.keys(cfg.text ?? {})) {
+  if (!(k in TEXT_DEFAULTS)) console.warn(`[text] ${PROFILE_NAME}/site.config.yaml sets unknown text "${k}". Known: ${Object.keys(TEXT_DEFAULTS).join(', ')}`);
+}
+
+/** Page text for `key`, with the profile's override applied. */
+export function t(key: TextKey, role?: Pick<Role, 'label'>): string {
+  const raw = String(cfg.text?.[key] ?? TEXT_DEFAULTS[key]);
+  return raw.replace(/\{role\}/g, role?.label ?? '').replace(/\{name\}/g, cfg.name ?? '');
+}
 
 /** Roles shown in the persona switcher. */
 export const switchableRoles: Role[] = [
@@ -259,8 +301,8 @@ export async function warnSkillProblems() {
   for (const r of Object.values(roles) as Role[]) {
     for (const h of r.skills_highlight) {
       const id = skillId(h);
-      if (!id) console.warn(`[skills] roles/${r.id}.yaml highlights "${h}", but skills.yaml lists it under not_skills`);
-      else if (!cat.has(id)) console.warn(`[skills] roles/${r.id}.yaml highlights "${h}", but no project, post, TIL, debug entry or job uses it yet`);
+      if (!id) console.warn(`[skills] ${PROFILE_NAME}/roles/${r.id}.yaml highlights "${h}", but skills.yaml lists it under not_skills`);
+      else if (!cat.has(id)) console.warn(`[skills] ${PROFILE_NAME}/roles/${r.id}.yaml highlights "${h}", but no project, post, TIL, debug entry or job uses it yet`);
     }
   }
 }

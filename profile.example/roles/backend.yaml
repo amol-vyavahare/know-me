@@ -1,0 +1,14 @@
+id: backend
+label: Backend Engineer
+accent: "#38bdf8"            # role colour used across the site
+headline: Backend engineer who keeps APIs fast and boring.
+summary: >
+  I design and run the services behind the product: APIs, queues and the
+  databases underneath. I like small, well-tested changes and dashboards that
+  tell you something before the customers do.
+skills_highlight: [go, api-design, postgres, caching]
+# Order of sections on the home page. Types: debug | project | post | til
+content_priority: [project, debug, post, til]
+hide_types: []
+resume_pdf: ""               # e.g. /resumes/backend.pdf (inside public/) — blank = "Print / Save as PDF"
+cta: Open to senior backend roles

@@ -2,7 +2,7 @@
 title: ""
 type: debug
 date: 2020-01-15            # when it happened — this is the date shown on the site
-roles: [qa]                 # qa | devops | product-owner | all
+roles: [__ROLE__]           # role ids = file names in your profile's roles/ folder, or all
 featured: []                # roles to pin this to the top for
 tags: []
 summary: ""                 # 1–2 sentences, shown on cards and fed to the future chatbot

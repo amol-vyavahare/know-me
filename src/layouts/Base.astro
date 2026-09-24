@@ -3,7 +3,9 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/space-grotesk';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
-import { cfg, switchableRoles, activeRole, u, type View } from '../lib/site';
+import fs from 'node:fs';
+import { profilePath } from '../lib/load-config.mjs';
+import { cfg, switchableRoles, activeRole, u, initials, type View } from '../lib/site';
 
 interface Props {
   view: View;
@@ -31,7 +33,8 @@ const nav = [
 ].filter((n) => !n.type || !role.hide_types.includes(n.type as any));
 
 const current = path.split('/')[0];
-const initials = cfg.name.split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('');
+// The profile's own favicon if it has one, else one generated from the initials
+const favicon = fs.existsSync(profilePath('public', 'favicon.svg')) ? 'favicon.svg' : 'icon.svg';
 ---
 <!doctype html>
 <html lang="en" style={`--accent:${role.accent}`}>
@@ -46,7 +49,7 @@ const initials = cfg.name.split(/\s+/).map((w: string) => w[0]).slice(0, 2).join
   <meta property="og:type" content="website" />
   <meta property="og:url" content={canonical} />
   <meta name="theme-color" content={role.accent} />
-  <link rel="icon" href={u('favicon.svg')} type="image/svg+xml" />
+  <link rel="icon" href={u(favicon)} type="image/svg+xml" />
   <script is:inline>
     try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
   </script>

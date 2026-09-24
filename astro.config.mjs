@@ -1,6 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import { loadSiteConfig } from './src/lib/load-config.mjs';
+import { loadSiteConfig, profilePath } from './src/lib/load-config.mjs';
 import remarkConfidential from './src/lib/remark-confidential.mjs';
 
 const cfg = loadSiteConfig();
@@ -13,6 +13,8 @@ const base = process.env.BASE_PATH || cfg.base_path || '/';
 export default defineConfig({
   site,
   base,
+  // Images, avatar and resume PDFs come from the active profile
+  publicDir: profilePath('public'),
   trailingSlash: 'always',
   markdown: {
     remarkPlugins: [remarkConfidential],

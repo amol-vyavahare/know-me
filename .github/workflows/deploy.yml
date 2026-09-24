@@ -21,6 +21,8 @@ jobs:
       # Works for any repo name: https://<owner>.github.io/<repo>/
       SITE: https://${{ github.repository_owner }}.github.io
       BASE_PATH: /${{ github.event.repository.name }}
+      # Folder holding everything personal (config, roles, skills, content, images)
+      PROFILE: profile
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -1,0 +1,16 @@
+# Skills are collected automatically from `tags:` / `stack:` on content and
+# `skills:` on experience files. List a skill here only to set its
+#   label (display name) · category (group on the Skills page) · aliases (other names)
+skills:
+  go:          { label: Go, category: Languages, aliases: [golang] }
+  python:      { category: Languages }
+  sql:         { label: SQL, category: Languages }
+  postgres:    { label: PostgreSQL, category: Data, aliases: [postgresql, psql] }
+  kafka:       { category: Data }
+  airflow:     { category: Data, aliases: [apache-airflow] }
+  api-design:  { label: API design, category: Backend }
+  caching:     { category: Backend }
+  redis:       { category: Backend }
+
+# Tags used for filtering that should never get a skill page
+not_skills: [career]

@@ -1,0 +1,12 @@
+id: data
+label: Data Engineer
+accent: "#f59e0b"
+headline: Data engineer who builds pipelines you can trust.
+summary: >
+  I move data from where it is to where it is useful, reliably, on time and
+  with tests. Batch or streaming, the goal is the same: numbers people believe.
+skills_highlight: [python, airflow, kafka, sql]
+content_priority: [project, post, debug, til]
+hide_types: []
+resume_pdf: ""
+cta: Open to data engineering roles

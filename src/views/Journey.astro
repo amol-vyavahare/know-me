@@ -1,6 +1,6 @@
 ---
 import { render } from 'astro:content';
-import { experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, skillId, skillUrl, type View } from '../lib/site';
+import { experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, skillId, skillUrl, t, type View } from '../lib/site';
 
 interface Props { view: View }
 const { view } = Astro.props;
@@ -18,8 +18,8 @@ const entries = await Promise.all(jobs.map(async (j) => {
 <div class="wrap">
   <header class="page-head">
     <span class="eyebrow">Journey</span>
-    <h1>The long road so far</h1>
-    <p>Every role, what I owned there, and what I wrote about along the way — shown through a {role.label} lens.</p>
+    <h1>{t('journey_title', role)}</h1>
+    <p>{t('journey_lead', role)}</p>
   </header>
 
   <div class="timeline">

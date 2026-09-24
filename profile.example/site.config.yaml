@@ -1,0 +1,57 @@
+# ─────────────────────────────────────────────────────────────
+#  STARTER PROFILE — copy this whole folder to `profile/` and edit.
+#  Everything personal lives in this one folder:
+#    site.config.yaml · skills.yaml · roles/ · content/ · public/
+#  Build another folder with:  PROFILE=path/to/folder npm run build
+# ─────────────────────────────────────────────────────────────
+
+# The persona shown on the home page.
+# Must match a file in roles/ (the id, e.g. roles/backend.yaml → backend)
+active_role: backend
+
+# Personas that get their own URL:  /<repo>/r/<id>/
+roles_enabled: [backend, data]
+
+# Also build /<repo>/r/all/ with every public item, unfiltered.
+# true | false | { label, summary, accent } to customise it
+all_view:
+  label: Everything
+  summary: Every project, debug story and post, across every role.
+
+# Show items that have no `roles:` at all in every persona?
+show_untagged: false
+
+# Company names on items marked `confidential: true`
+#   show → real `company` name is shown
+#   mask → `company_alias` is shown, and the real name is replaced in the body text too
+#   hide → confidential items are left out of the site completely
+confidential_mode: mask
+
+# ── About you ────────────────────────────────────────────────
+name: Alex Doe
+tagline: Backend engineer · data plumber · writes things down
+location: Somewhere, Earth
+avatar: /avatar.svg          # put your photo in public/ and point to it
+email: alex@example.com      # shown on Contact; leave blank to hide
+availability: Open to new roles   # small status pill; blank to hide
+links:
+  - { label: GitHub,   url: https://github.com/your-github-username }
+  - { label: LinkedIn, url: https://www.linkedin.com/in/your-profile }
+
+# Career start, used for the "years of experience" stat
+career_start: 2018-01-01
+
+# Fallback URL for local builds. On GitHub Actions the real
+# https://<owner>.github.io/<repo> is filled in automatically.
+site_url: https://your-github-username.github.io
+base_path: /know-me
+
+# ── Page text (optional) ─────────────────────────────────────
+# Override any heading or blurb the site writes for you.
+# {role} → the persona's label, {name} → your name.
+# Keys: home_featured_title, home_skills_title, home_writing_title, home_journey_title,
+#       home_cta_title, home_cta_text, projects_title, projects_lead, debug_title,
+#       debug_lead, blog_title, blog_lead, skills_title, skills_lead, journey_title,
+#       journey_lead, about_title, not_found_title, not_found_lead
+text:
+  home_cta_text: Happy to talk about backend systems, data pipelines, or a bug you can't pin down.

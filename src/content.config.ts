@@ -1,7 +1,11 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { loadRoles } from './lib/load-config.mjs';
+import { pathToFileURL } from 'node:url';
+import { loadRoles, profilePath } from './lib/load-config.mjs';
+
+/** Content folders live inside the active profile (see load-config.mjs). */
+const contentDir = (sub = '') => pathToFileURL(profilePath('content', sub) + '/');
 
 // Every `roles:` value must be a file in /roles or "all" — a typo fails the build.
 const knownRoles = [...Object.keys(loadRoles()), 'all'];
@@ -20,7 +24,7 @@ const confidential = {
 
 /** Posts, projects, debug diaries and TILs share one schema. */
 const items = defineCollection({
-  loader: glob({ pattern: ['posts/**/*.md', 'projects/**/*.md', 'debug/**/*.md', 'til/**/*.md'], base: './content' }),
+  loader: glob({ pattern: ['posts/**/*.md', 'projects/**/*.md', 'debug/**/*.md', 'til/**/*.md'], base: contentDir() }),
   schema: z.object({
     title: z.string(),
     type: z.enum(['post', 'project', 'debug', 'til']),
@@ -51,7 +55,7 @@ const highlight = z.union([
 
 /** One file per job — drives the Journey timeline and the Resume. */
 const experience = defineCollection({
-  loader: glob({ pattern: '*.md', base: './content/experience' }),
+  loader: glob({ pattern: '*.md', base: contentDir('experience') }),
   schema: z.object({
     title: z.string(),                           // job title
     start: z.coerce.date(),
@@ -68,7 +72,7 @@ const experience = defineCollection({
 
 /** Free-form pages such as About. */
 const pages = defineCollection({
-  loader: glob({ pattern: '*.md', base: './content/pages' }),
+  loader: glob({ pattern: '*.md', base: contentDir('pages') }),
   schema: z.object({ title: z.string() }),
 });
 

@@ -3,7 +3,7 @@ import ItemCard from '../components/ItemCard.astro';
 import ItemRow from '../components/ItemRow.astro';
 import {
   cfg, u, viewUrl, itemsFor, featuredFor, experienceFor, displayCompany, fmtDate,
-  yearsOfExperience, prettyTag, TYPE_META, skillsFor, skillId, skillUrl, type View, type ItemType,
+  yearsOfExperience, prettyTag, TYPE_META, skillsFor, skillId, skillUrl, t as text, type View, type ItemType,
 } from '../lib/site';
 
 interface Props { view: View }
@@ -40,7 +40,7 @@ const sections = role.content_priority
     const types: ItemType[] = t === 'post' ? ['post', 'til'] : [t as ItemType];
     const items = all.filter((i) => types.includes(i.data.type) && !featuredIds.has(i.id)).slice(0, t === 'post' ? 5 : 3);
     const meta = TYPE_META[t as ItemType];
-    return { t, items, title: t === 'post' ? 'Writing & learnings' : meta.plural, section: meta.section };
+    return { t, items, title: t === 'post' ? text('home_writing_title', role) : meta.plural, section: meta.section };
   })
   .filter((s) => s.items.length);
 
@@ -77,7 +77,7 @@ const [first, ...rest] = role.headline.split(' ');
   <section class="section">
     <div class="wrap">
       <div class="section-head">
-        <div><span class="eyebrow">Start here</span><h2>Best of my {role.label} work</h2></div>
+        <div><span class="eyebrow">Start here</span><h2>{text('home_featured_title', role)}</h2></div>
       </div>
       <div class="grid">
         {featured.map((i) => <ItemCard item={i} view={view} featured />)}
@@ -90,7 +90,7 @@ const [first, ...rest] = role.headline.split(' ');
   <section class="section" style="padding-top:0">
     <div class="wrap">
       <div class="section-head">
-        <div><span class="eyebrow">Toolkit</span><h2>Skills, with receipts</h2></div>
+        <div><span class="eyebrow">Toolkit</span><h2>{text('home_skills_title', role)}</h2></div>
         <a href={viewUrl(view, 'skills')}>All skills →</a>
       </div>
       <div class="skills">
@@ -121,7 +121,7 @@ const [first, ...rest] = role.headline.split(' ');
   <section class="section" style="padding-top:8px">
     <div class="wrap">
       <div class="section-head">
-        <div><span class="eyebrow">Journey</span><h2>Where I've been</h2></div>
+        <div><span class="eyebrow">Journey</span><h2>{text('home_journey_title', role)}</h2></div>
         <a href={viewUrl(view, 'journey')}>Full timeline →</a>
       </div>
       <div class="rows">
@@ -140,8 +140,8 @@ const [first, ...rest] = role.headline.split(' ');
 <div class="wrap">
   <div class="cta-band">
     <div>
-      <h2>{role.cta || 'Let’s talk'}</h2>
-      <p>Happy to chat about roles, projects, or a tricky bug you’re chasing.</p>
+      <h2>{role.cta || text('home_cta_title', role)}</h2>
+      <p>{text('home_cta_text', role)}</p>
     </div>
     <div class="btn-row">
       {email && <a class="btn primary" href={email}>Email me</a>}

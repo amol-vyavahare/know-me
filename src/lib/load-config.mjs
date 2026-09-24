@@ -1,30 +1,57 @@
-// Plain-JS loader so astro.config.mjs, the remark plugin and pages share one source.
+// Plain-JS loader so astro.config.mjs, the remark plugin, scripts and pages share one source.
+//
+// Everything personal lives in ONE profile folder:
+//   profile/site.config.yaml  profile/skills.yaml  profile/roles/  profile/content/  profile/public/
+// Pick another folder with the PROFILE env var:  PROFILE=profiles/jane npm run build
 import fs from 'node:fs';
 import path from 'node:path';
 import { load as yamlLoad } from 'js-yaml';
 
 const root = process.cwd();
 
+/** Absolute path of the active profile folder. */
+export const PROFILE_DIR = path.resolve(root, process.env.PROFILE || 'profile');
+/** Same, as written in messages ("profile", "profiles/jane"). */
+export const PROFILE_NAME = path.relative(root, PROFILE_DIR).replace(/\\/g, '/') || '.';
+
+if (!fs.existsSync(path.join(PROFILE_DIR, 'site.config.yaml'))) {
+  throw new Error(
+    `No profile found at "${PROFILE_NAME}/" (looked for ${PROFILE_NAME}/site.config.yaml).\n` +
+      `Copy profile.example/ to profile/, or point PROFILE at your profile folder.`,
+  );
+}
+
+/** Path to a file inside the profile folder. */
+export const profilePath = (...parts) => path.join(PROFILE_DIR, ...parts);
+
+const readYaml = (file) => yamlLoad(fs.readFileSync(file, 'utf8')) ?? {};
+
 export function loadSiteConfig() {
-  const raw = yamlLoad(fs.readFileSync(path.join(root, 'site.config.yaml'), 'utf8')) ?? {};
+  const raw = readYaml(profilePath('site.config.yaml'));
+  if (!raw.active_role) {
+    throw new Error(`${PROFILE_NAME}/site.config.yaml must set "active_role" to the id of a file in ${PROFILE_NAME}/roles/`);
+  }
+  // all_view: true | false | { label, summary, accent }
+  const all = raw.all_view ?? true;
   return {
-    active_role: 'qa',
     roles_enabled: [],
-    all_view: true,
     show_untagged: false,
     confidential_mode: 'mask',
     links: [],
+    text: {},
     ...raw,
+    all_view: all === false ? false : { ...(typeof all === 'object' ? all : {}) },
   };
 }
 
 export function loadRoles() {
-  const dir = path.join(root, 'roles');
+  const dir = profilePath('roles');
+  if (!fs.existsSync(dir)) throw new Error(`${PROFILE_NAME}/roles/ is missing — add at least one role file`);
   const roles = {};
   for (const f of fs.readdirSync(dir)) {
     if (!/\.ya?ml$/.test(f)) continue;
-    const r = yamlLoad(fs.readFileSync(path.join(dir, f), 'utf8'));
-    if (!r?.id) throw new Error(`roles/${f} is missing an "id"`);
+    const r = readYaml(path.join(dir, f));
+    if (!r?.id) throw new Error(`${PROFILE_NAME}/roles/${f} is missing an "id"`);
     roles[r.id] = {
       accent: '#8b5cf6',
       skills_highlight: [],
@@ -40,9 +67,9 @@ export function loadRoles() {
 
 /** skills.yaml is optional — without it every tag/stack entry is its own skill. */
 export function loadSkills() {
-  const file = path.join(root, 'skills.yaml');
+  const file = profilePath('skills.yaml');
   if (!fs.existsSync(file)) return { skills: {}, not_skills: [] };
-  const raw = yamlLoad(fs.readFileSync(file, 'utf8')) ?? {};
+  const raw = readYaml(file);
   return { skills: raw.skills ?? {}, not_skills: raw.not_skills ?? [] };
 }
 

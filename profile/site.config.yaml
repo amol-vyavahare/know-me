@@ -1,15 +1,18 @@
 # ─────────────────────────────────────────────────────────────
 #  Site-wide settings. Change a line, commit, push — the site rebuilds.
+#  Everything personal lives in this profile folder:
+#    site.config.yaml · skills.yaml · roles/ · content/ · public/
 # ─────────────────────────────────────────────────────────────
 
 # The persona shown at  https://<username>.github.io/know-me/
-# Must match a file in /roles (qa | devops | product-owner)
+# Must match a file in roles/ (the id, e.g. roles/qa.yaml → qa)
 active_role: qa
 
 # Personas that get their own URL:  /know-me/r/<id>/
 roles_enabled: [qa, devops, product-owner]
 
-# Also build /know-me/r/all/ with every public item, unfiltered
+# Also build /know-me/r/all/ with every public item, unfiltered.
+# true | false | { label, summary, accent } to customise it
 all_view: true
 
 # Show items that have no `roles:` at all in every persona?
@@ -25,7 +28,7 @@ confidential_mode: mask
 name: Amol Vyavahare
 tagline: Software professional · builder · problem solver
 location: Pune, India
-avatar: /avatar.svg          # put your photo in /public and point to it
+avatar: /avatar.svg          # put your photo in public/ and point to it
 email: you@example.com       # shown on Contact; leave blank to hide
 availability: Open to new roles   # small status pill; blank to hide
 links:
@@ -39,3 +42,14 @@ career_start: 2014-06-01
 # https://<owner>.github.io/<repo> is filled in automatically.
 site_url: https://your-github-username.github.io
 base_path: /know-me
+
+# ── Page text (optional) ─────────────────────────────────────
+# Override any heading or blurb the site writes for you.
+# {role} → the persona's label, {name} → your name.
+# Keys: home_featured_title, home_skills_title, home_writing_title, home_journey_title,
+#       home_cta_title, home_cta_text, projects_title, projects_lead, debug_title,
+#       debug_lead, blog_title, blog_lead, skills_title, skills_lead, journey_title,
+#       journey_lead, about_title, not_found_title, not_found_lead
+text: {}
+#  projects_title: Things I built & shipped
+#  home_cta_text: Happy to chat about roles, projects, or a tricky bug you’re chasing.
