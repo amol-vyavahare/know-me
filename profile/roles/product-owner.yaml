@@ -9,5 +9,7 @@ summary: >
 skills_highlight: [backlog-management, discovery, stakeholder-management, agile, metrics, user-stories]
 content_priority: [project, post, debug, til]
 hide_types: []
+hide_sections: []           # journey | resume | about — pages to leave out for this role
 resume_pdf: ""
+# link: po-0kjq1qrg         # secret path of this role's share site (see share_links in site.config.yaml)
 cta: Open to Product Owner and Technical PO roles

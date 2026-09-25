@@ -5,6 +5,11 @@
  *   /projects/ /debug/ /blog/ /skills/ /journey/ /resume/ /about/  (same under /r/<role>/)
  *   /skills/<skill>/        → everything backing up one skill
  *   /p/<type>/<slug>/       → item page (also /r/<role>/p/...)
+ *
+ * With share_links enabled (docs/sharing.md) the same pages are built per *site*:
+ *   /                       → neutral landing page (name + contact only)
+ *   /<full_site>/…          → the full multi-role site above
+ *   /<role link>/…          → a single-role site: only that role's entries, skills and jobs
  */
 import Base from '../layouts/Base.astro';
 import Home from '../views/Home.astro';
@@ -15,12 +20,14 @@ import About from '../views/About.astro';
 import ItemView from '../views/ItemView.astro';
 import Skills from '../views/Skills.astro';
 import SkillView from '../views/SkillView.astro';
+import Landing from '../views/Landing.astro';
 import {
-  allViews, publicItems, itemPath, safeText, skillCatalog, skillPath, warnSkillProblems, type View, type Item,
+  allViews, publicItems, itemPath, itemsFor, safeText, skillCatalog, skillsFor, skillPath, warnSkillProblems,
+  sharing, landingView, hasSection, type View, type Item,
 } from '../lib/site';
 
 type Page =
-  | { kind: 'home' | 'projects' | 'debug' | 'blog' | 'skills' | 'journey' | 'resume' | 'about' }
+  | { kind: 'home' | 'projects' | 'debug' | 'blog' | 'skills' | 'journey' | 'resume' | 'about' | 'landing' }
   | { kind: 'item'; item: Item }
   | { kind: 'skill'; id: string; label: string };
 
@@ -30,20 +37,26 @@ export async function getStaticPaths() {
   await warnSkillProblems();
   const sections = ['projects', 'debug', 'blog', 'skills', 'journey', 'resume', 'about'] as const;
   const paths = [];
+  if (sharing) paths.push({ params: { path: undefined }, props: { view: landingView, page: { kind: 'landing' }, sub: '' } });
   for (const view of allViews()) {
     const pre = view.prefix.replace(/\/$/, '');
     const join = (s: string) => [pre, s].filter(Boolean).join('/') || undefined;
     paths.push({ params: { path: join('') }, props: { view, page: { kind: 'home' }, sub: '' } });
     for (const s of sections) {
-      if (s === 'debug' && view.role.hide_types.includes('debug')) continue;
+      if (!hasSection(view.role, s)) continue; // hide_types: [debug] / hide_sections: [journey, …]
       paths.push({ params: { path: join(s) }, props: { view, page: { kind: s }, sub: `${s}/` } });
     }
-    for (const item of items) {
+    // A share site only contains its own role's entries and skills. Other sites build every
+    // entry and skill in every view, so the persona switcher never lands on a 404.
+    const viewItems = view.focus ? await itemsFor(view.role) : items;
+    const viewSkills = view.focus
+      ? (await skillsFor(view.role)).filter((s) => s.items.length || s.jobs.length)
+      : skills;
+    for (const item of viewItems) {
       const p = itemPath(item);
       paths.push({ params: { path: join(p.replace(/\/$/, '')) }, props: { view, page: { kind: 'item', item }, sub: p } });
     }
-    // Every skill exists in every view, so the persona switcher never 404s
-    for (const { id, label } of skills) {
+    for (const { id, label } of viewSkills) {
       const p = skillPath(id);
       paths.push({ params: { path: join(p.replace(/\/$/, '')) }, props: { view, page: { kind: 'skill', id, label }, sub: p } });
     }
@@ -53,17 +66,18 @@ export async function getStaticPaths() {
 
 const { view, page, sub } = Astro.props as { view: View; page: Page; sub: string };
 const titles: Record<string, string> = {
-  projects: 'Projects', debug: 'Debug Diary', blog: 'Blog', skills: 'Skills', journey: 'Journey', resume: `Resume — ${view.role.label}`, about: 'About',
+  projects: 'Projects', debug: 'Debug Diary', blog: 'Blog', skills: 'Skills', journey: 'Journey', resume: `Resume — ${view.role.label}`, about: 'About me',
 };
 const title =
   page.kind === 'item' ? safeText(page.item.data.title, page.item.data)
   : page.kind === 'skill' ? `${page.label} — Skills`
   : titles[page.kind];
 const description = page.kind === 'item' ? safeText(page.item.data.summary, page.item.data) : undefined;
-// Item pages are canonical at the role-free URL; section pages at the view's own URL
-const canonicalPath = page.kind === 'item' ? sub : view.prefix + sub;
+// Item pages are canonical at their site's role-free URL; section pages at the view's own URL
+const canonicalPath = page.kind === 'item' ? view.site + sub : view.prefix + sub;
 ---
-<Base view={view} title={title} description={description} path={sub} canonicalPath={canonicalPath}>
+<Base view={view} title={title} description={description} path={sub} canonicalPath={canonicalPath} bare={page.kind === 'landing'}>
+  {page.kind === 'landing' && <Landing />}
   {page.kind === 'home' && <Home view={view} />}
   {(page.kind === 'projects' || page.kind === 'debug' || page.kind === 'blog') && <ListView view={view} kind={page.kind} />}
   {page.kind === 'skills' && <Skills view={view} />}

@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import { loadSiteConfig, loadRoles, loadSkills, maskText, PROFILE_NAME } from './load-config.mjs';
 
 export const cfg = loadSiteConfig();
@@ -17,15 +18,23 @@ export interface Role {
   skills_highlight: string[];
   content_priority: ItemType[];
   hide_types: ItemType[];
+  hide_sections: string[];
   resume_pdf: string;
   cta: string;
+  link: string;
 }
 
-/** A "view" = one persona rendered at one URL prefix. */
+/**
+ * A "view" = one persona rendered at one URL prefix.
+ * A "site" = the views that share one persona switcher. Normally there is one site at the root;
+ * with share_links on, there is your full site at a secret path plus one single-role site per `link:`.
+ */
 export interface View {
   role: Role;
-  prefix: string; // '' for the default view, 'r/qa/' etc.
+  prefix: string; // URL prefix of this view: '' | 'r/qa/' | '<full_site>/r/qa/' | '<link>/'
   isDefault: boolean;
+  site: string; // URL prefix of the site this view belongs to: '' | '<full_site>/' | '<link>/'
+  focus: boolean; // a single-role share site: no switcher, no mention of other roles
 }
 
 /** The unfiltered /r/all/ view; label, summary and accent can be set via `all_view:` in site.config.yaml. */
@@ -39,8 +48,10 @@ const ALL_ROLE: Role = {
   skills_highlight: [...new Set(Object.values(roles).flatMap((r: any) => r.skills_highlight))].slice(0, 10) as string[],
   content_priority: ['project', 'debug', 'post', 'til'],
   hide_types: [],
+  hide_sections: [],
   resume_pdf: '',
   cta: cfg.availability ?? '',
+  link: '',
 };
 
 export function getRole(id: string): Role {
@@ -51,6 +62,22 @@ export function getRole(id: string): Role {
 }
 
 export const activeRole = getRole(cfg.active_role);
+
+/** Sections a role can hide with `hide_sections:` (content sections are hidden with `hide_types:`). */
+export const HIDEABLE_SECTIONS = ['journey', 'resume', 'about'];
+for (const r of Object.values(roles) as Role[]) {
+  for (const s of r.hide_sections) {
+    if (!HIDEABLE_SECTIONS.includes(s)) {
+      throw new Error(`${PROFILE_NAME}/roles/${r.id}.yaml: hide_sections can only contain ${HIDEABLE_SECTIONS.join(', ')} (got "${s}")`);
+    }
+  }
+}
+
+/** Does this role show a section page ('projects', 'debug', 'journey', …)? */
+export function hasSection(role: Role, section: string): boolean {
+  if (section === 'debug') return !role.hide_types.includes('debug');
+  return !role.hide_sections.includes(section);
+}
 
 /** "Jane Doe" → "JD" — used by the header mark and the generated favicon. */
 export const initials = String(cfg.name ?? '')
@@ -98,11 +125,45 @@ export const switchableRoles: Role[] = [
   ...(cfg.all_view ? [ALL_ROLE] : []),
 ];
 
+// ── Share links ─────────────────────────────────────────────
+// share_links.enabled → the root becomes a neutral landing page, your full multi-role site
+// moves to /<full_site>/ and every role with a `link:` gets its own single-role site at /<link>/.
+export const sharing: boolean = cfg.share_links.enabled;
+/** Roles that get their own single-role share site. */
+export const shareRoles: Role[] = sharing ? (Object.values(roles) as Role[]).filter((r) => r.link) : [];
+/** URL prefix of your full multi-role site, or null when it isn't built. */
+export const fullSite: string | null = !sharing ? '' : cfg.share_links.full_site ? `${cfg.share_links.full_site}/` : null;
+
+if (sharing) {
+  const RESERVED = ['r', 'p', 'projects', 'debug', 'blog', 'skills', 'journey', 'resume', 'about', '_astro', '404'];
+  const seen = new Map<string, string>();
+  const check = (link: string, owner: string) => {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(link)) throw new Error(`${owner}: link "${link}" may only use a-z, 0-9 and -`);
+    if (RESERVED.includes(link)) throw new Error(`${owner}: link "${link}" is a reserved page name`);
+    if (seen.has(link)) throw new Error(`${owner}: link "${link}" is already used by ${seen.get(link)}`);
+    if (link.length < 10) console.warn(`[share] ${owner}: link "${link}" is short and easy to guess; add random characters`);
+    seen.set(link, owner);
+  };
+  if (cfg.share_links.full_site) check(cfg.share_links.full_site, `${PROFILE_NAME}/site.config.yaml share_links.full_site`);
+  for (const r of shareRoles) check(r.link, `${PROFILE_NAME}/roles/${r.id}.yaml`);
+  if (!shareRoles.length) console.warn(`[share] share_links is enabled but no role in ${PROFILE_NAME}/roles/ has a "link:"`);
+}
+
+/** The neutral page at the site root when sharing (also used for the 404 page). */
+export const landingView: View = { role: activeRole, prefix: '', isDefault: true, site: '', focus: true };
+
 export function allViews(): View[] {
-  return [
-    { role: activeRole, prefix: '', isDefault: true },
-    ...switchableRoles.map((role) => ({ role, prefix: `r/${role.id}/`, isDefault: false })),
-  ];
+  const views: View[] = [];
+  if (fullSite !== null) {
+    views.push({ role: activeRole, prefix: fullSite, isDefault: true, site: fullSite, focus: false });
+    for (const role of switchableRoles) {
+      views.push({ role, prefix: `${fullSite}r/${role.id}/`, isDefault: false, site: fullSite, focus: false });
+    }
+  }
+  for (const role of shareRoles) {
+    views.push({ role, prefix: `${role.link}/`, isDefault: true, site: `${role.link}/`, focus: true });
+  }
+  return views;
 }
 
 // ── URLs ────────────────────────────────────────────────────
@@ -167,9 +228,24 @@ export async function featuredFor(role: Role, limit = 3): Promise<Item[]> {
   return (pinned.length ? pinned : list).slice(0, limit);
 }
 
+/** A job's fields as one persona sees them: its `per_role` entry merged over the base fields. */
+export type JobData = Experience['data'] & { description?: string };
+export function jobFor(exp: Experience, role: Role): Experience {
+  const o = exp.data.per_role[role.id];
+  return o ? { ...exp, data: { ...exp.data, ...o } } : exp;
+}
+
+/** Jobs shown to a persona, with that persona's per_role changes applied, newest first. */
 export async function experienceFor(role: Role): Promise<Experience[]> {
   const list = await getCollection('experience', (e) => visible(e.data) && matchesRole(e.data.roles, role));
-  return list.sort((a, b) => b.data.start.valueOf() - a.data.start.valueOf());
+  return list.map((e) => jobFor(e, role)).sort((a, b) => b.data.start.valueOf() - a.data.start.valueOf());
+}
+
+let mdProcessor: ReturnType<typeof createMarkdownProcessor> | undefined;
+/** Render a Markdown string (e.g. a per_role `description`) to HTML. */
+export async function renderMarkdown(src: string): Promise<string> {
+  mdProcessor ??= createMarkdownProcessor();
+  return (await (await mdProcessor).render(src)).code;
 }
 
 export function highlightsFor(exp: Experience, role: Role): string[] {
@@ -265,10 +341,12 @@ export function skillCatalog(): Promise<Map<string, SkillInfo>> {
     };
     const jobs = await getCollection('experience', (e) => visible(e.data));
     for (const i of await publicItems()) [...i.data.tags, ...i.data.stack].forEach(note);
-    for (const j of jobs) j.data.skills.forEach(note);
+    // Base skills plus every persona's per_role skills
+    const jobSkillNames = (j: Experience) => [...j.data.skills, ...Object.values(j.data.per_role).flatMap((o) => o.skills ?? [])];
+    for (const j of jobs) jobSkillNames(j).forEach(note);
     // An alias may be the only spelling used — still count its skill
     for (const i of await publicItems()) for (const id of itemSkillIds(i)) if (!spelling.has(id)) spelling.set(id, id);
-    for (const j of jobs) for (const id of jobSkillIds(j)) if (!spelling.has(id)) spelling.set(id, id);
+    for (const j of jobs) for (const id of uniqueSkills(jobSkillNames(j))) if (!spelling.has(id)) spelling.set(id, id);
 
     const out = new Map<string, SkillInfo>();
     for (const [id, raw] of spelling) {

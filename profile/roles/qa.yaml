@@ -10,5 +10,7 @@ skills_highlight: [test-strategy, playwright, selenium, api-testing, performance
 # Order of sections on the home page. Types: debug | project | post | til
 content_priority: [debug, project, post, til]
 hide_types: []
+hide_sections: []           # journey | resume | about — pages to leave out for this role
 resume_pdf: ""               # e.g. /resumes/qa.pdf — blank = "Print / Save as PDF"
+# link: qa-v6upuwzk         # secret path of this role's share site (see share_links in site.config.yaml)
 cta: Open to SDET and QA Lead roles

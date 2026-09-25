@@ -12,6 +12,8 @@ Static Astro site: a role-tailored career portfolio. Read `README.md` first; det
 - **Build links with `u()`, `viewUrl()`, `itemUrl()` or `skillUrl()`.** Never hard-code `/…`, because the site runs under a base path.
 - **Pass confidential free text through `safeText()`** and company names through `displayCompany()`.
 - **Schema changes in `src/content.config.ts` must be optional or defaulted** so existing profiles keep building.
+- **Share sites (`view.focus`) must never reveal other roles**: no switcher, no `r/…` links, no cross-site links.
+  With share links on, the root is a neutral landing page and the full site lives at `view.site`. See `docs/sharing.md`.
 
 ## Commands
 

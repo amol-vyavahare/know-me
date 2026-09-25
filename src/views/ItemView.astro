@@ -22,7 +22,8 @@ const related = pool
   .slice(0, 3)
   .map((r) => r.i);
 
-const roleLabels = d.roles.includes('all')
+// A single-role share site never names the other roles
+const roleLabels = view.focus ? [] : d.roles.includes('all')
   ? ['All roles']
   : switchableRoles.filter((r) => d.roles.includes(r.id)).map((r) => r.label);
 

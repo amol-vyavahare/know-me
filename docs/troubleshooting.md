@@ -48,6 +48,11 @@ Add `active_role: <id>` using the `id` of one of your `roles/*.yaml` files.
 `active_role` or `roles_enabled` names a role with no file. Rename the id, or add the role file.
 (The check is on the role's `id:` field; the file name should match it for clarity.)
 
+### `… link "x" may only use a-z, 0-9 and -` / `is a reserved page name` / `is already used by …`
+
+A share link in a role file or `share_links.full_site` is invalid or duplicated. Pick another value.
+See [sharing.md](sharing.md#turn-it-on).
+
 ### `…/roles/<file> is missing an "id"`
 
 Every role file needs `id:`.
@@ -61,6 +66,8 @@ The build still succeeds; these are hints.
 | `[skills] …/roles/qa.yaml highlights "x", but no project, post, TIL, debug entry or job uses it yet` | Add content tagged `x`, or remove it from `skills_highlight`. |
 | `[skills] … highlights "x", but skills.yaml lists it under not_skills` | Remove it from one of the two lists. |
 | `[text] … sets unknown text "x"` | Typo in a `text:` key. The message lists valid keys. |
+| `[share] … link "x" is short and easy to guess` | Add random characters to that `link:`. |
+| `[share] share_links is enabled but no role … has a "link:"` | Add `link:` to the roles you want to share. |
 
 ## Something doesn't show up
 
@@ -76,6 +83,8 @@ The build still succeeds; these are hints.
 | Real company name visible | `confidential_mode` is `show`, or the entry lacks `confidential: true`. (It's always visible in the Markdown source.) |
 | Image in an entry is broken | Use a relative path next to the Markdown (`./pic.png`), not `/pic.png`. See [writing-content.md](writing-content.md#images-and-files). |
 | Avatar or PDF 404 | The file must be in `profile/public/`, referenced from its root (`/me.jpg`). |
+| Share site shows another role's name | It's in your own text (About page, a multi-role post, a job bullet). See [sharing.md](sharing.md#keeping-your-writing-role-neutral). |
+| Old site at the root disappeared after enabling share links | Expected. The full site moved to `/<full_site>/`. |
 | Old content still shown after editing YAML in `npm run dev` | Restart `npm run dev`; YAML files are read at startup. |
 
 ## Deployment problems

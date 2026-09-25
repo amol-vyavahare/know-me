@@ -8,5 +8,7 @@ summary: >
 skills_highlight: [python, airflow, kafka, sql]
 content_priority: [project, post, debug, til]
 hide_types: []
+hide_sections: []           # journey | resume | about — pages to leave out for this role
 resume_pdf: ""
+# link: data-change-this-5678         # secret path of this role's share site (see share_links in site.config.yaml)
 cta: Open to data engineering roles

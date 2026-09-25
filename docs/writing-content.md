@@ -8,7 +8,7 @@ You can do this entirely in the GitHub web editor; no local setup needed.
 - [Front matter essentials](#front-matter-essentials)
 - [Choosing roles, featuring and tags](#choosing-roles-featuring-and-tags)
 - [Experience (jobs)](#experience-jobs)
-- [The About page](#the-about-page)
+- [The About me page](#the-about-me-page)
 - [Drafts and private entries](#drafts-and-private-entries)
 - [Confidential employers and clients](#confidential-employers-and-clients)
 - [Images and files](#images-and-files)
@@ -107,14 +107,40 @@ highlights:
 Optional longer description in Markdown (shown on the Journey page).
 ```
 
-Jobs feed the **Journey** timeline and the **Résumé**. Per-role `highlights` are how one career becomes
-several tailored résumés. `draft` and `visibility` are **not** supported on jobs; use `roles:` or
-`confidential` instead.
+Jobs feed the **Journey** timeline and the **Résumé**. Per-role `highlights` are how one career becomes several
+tailored résumés. A persona can drop the Journey page with `hide_sections: [journey]` in its role file; its jobs
+still appear on its résumé and home page. `draft` and `visibility` are **not** supported on jobs; use `roles:`
+or `confidential` instead.
 
-## The About page
+### Changing a job per persona
 
-`profile/content/pages/about.md`. Its `title:` becomes the page heading, and the body is free Markdown.
-Contact details beside it come from `site.config.yaml`.
+Any persona can see a job differently. Add `per_role:` with the fields to change. Anything left out keeps the
+base value:
+
+```yaml
+per_role:
+  devops:
+    title: "Platform Engineer"
+    summary: "Ran the CI platform for 40 engineers."
+    skills: [kubernetes, terraform]
+    start: 2019-03-01
+    end:                       # blank = Present
+    description: |             # Markdown; replaces the file's body on the DevOps Journey page
+      Owned the self-hosted runners and the deploy pipeline.
+```
+
+Changeable fields: `title`, `company`, `company_alias`, `location`, `start`, `end`, `summary`, `skills`,
+`description`. The change applies everywhere that persona sees the job: home page, Journey, Résumé, Skills pages
+and its share site. A job marked `confidential` still shows `company_alias` in `mask` mode, so change that too
+if needed. Recruiters may compare sites, so keep facts like dates consistent with your other résumés.
+
+## The About me page
+
+`profile/content/pages/about.md` is the **About me** tab. Its `title:` becomes the page heading, and the body is
+free Markdown. Contact details beside it come from `site.config.yaml`.
+
+To give one persona a different About me page, add `profile/content/pages/about-<role id>.md`
+(e.g. `about-qa.md`) in the same format. It replaces `about.md` for that persona only.
 
 ## Drafts and private entries
 

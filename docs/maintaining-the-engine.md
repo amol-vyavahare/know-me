@@ -25,6 +25,11 @@ For whoever changes the code in `src/`. If you only write content or edit settin
 
    **Every page is built once per view.** Views filter content by `roles:`, reorder home sections by
    `content_priority` and colour the site with the role's `accent`.
+
+   Views are grouped into *sites* (`view.site`, the URL prefix). Normally there is one site at the root.
+   With `share_links` on (see [sharing.md](sharing.md)), `allViews()` returns your full site under
+   `/<full_site>/` plus one **focus** view per role `link:` (`view.focus = true`). Focus views only get pages for
+   their own role's entries and skills, and must never show other roles. The root is `Landing.astro`.
 3. **One catch-all route.** `src/pages/[...path].astro` generates every HTML page for every view
    (home, sections, entries, skills) and hands off to a component in `src/views/`.
 4. **Fully static.** No server, no client framework. The only client JS is small inline scripts
@@ -57,7 +62,8 @@ docs/               ← these guides
 | `src/lib/remark-confidential.mjs` | Replaces confidential company names inside rendered Markdown in `mask` mode |
 | `src/content.config.ts` | Content collections and their Zod schemas (`items`, `experience`, `pages`). Validates `roles:` against the profile's role ids |
 | `src/pages/[...path].astro` | Generates all HTML pages for all views (`getStaticPaths`) and picks the view component |
-| `src/pages/content-index.json.ts` | `/content-index.json`, public content chunked by `##` heading, for a future chatbot |
+| `src/pages/[...site]/content-index.json.ts` | `/content-index.json`, public content chunked by `##` heading, for a future chatbot. Built only for the full site |
+| `src/pages/robots.txt.ts` | `robots.txt`; blocks everything when sharing |
 | `src/pages/icon.svg.ts` | Generated favicon (initials + default persona colour) |
 | `src/pages/404.astro` | Not-found page |
 | `src/layouts/Base.astro` | `<head>`, SEO tags, header nav, persona switcher, theme toggle, footer |
@@ -65,7 +71,8 @@ docs/               ← these guides
 | `src/views/ListView.astro` | Projects / Debug Diary / Blog lists with tag filter |
 | `src/views/ItemView.astro` | One entry: body, "At a glance", table of contents, tags, related |
 | `src/views/Skills.astro`, `SkillView.astro` | Skills index and one skill's page |
-| `src/views/Journey.astro`, `Resume.astro`, `About.astro` | Timeline, printable résumé, About |
+| `src/views/Journey.astro`, `Resume.astro`, `About.astro` | Timeline, printable résumé, About (`pages/about-<role>.md` overrides `about.md`) |
+| `src/views/Landing.astro` | Neutral root page when sharing (name + contact only) |
 | `src/components/` | `ItemCard` (grid card), `ItemRow` (list row), `TagFilter` (client-side tag filter) |
 | `src/styles/global.css` | All styling. Colour tokens on `:root` (dark default), light theme via `[data-theme=light]` / `prefers-color-scheme`, print styles for the résumé |
 | `templates/*.md` | Front matter scaffolds; `__ROLE__` is replaced by `npm run new` |
@@ -136,8 +143,15 @@ All of it is in the "Skills" section at the bottom of `src/lib/site.ts`: `skillS
   real person's name (see below).
 - **Links go through `u()` / `viewUrl()` / `itemUrl()` / `skillUrl()`.** Hard-coded `/…` links break under a base
   path like `/know-me/`.
-- **Every page exists in every view.** If a page can be empty for a persona, render an empty state rather than
-  skipping it.
+- **Every page exists in every view of a multi-role site.** If a page can be empty for a persona, render an empty
+  state rather than skipping it. (Focus views are the exception: they only contain their own role's pages.)
+- **Focus views (`view.focus`) never mention other roles.** No switcher, no `switchableRoles`, no `r/…` links,
+  no link to `view.site` of another site. After changing views, build with share links on and grep a share site
+  for other roles' labels (see [sharing.md](sharing.md#keeping-your-writing-role-neutral)).
+- **Check `hasSection(role, section)` before linking to a section page** (`debug` via `hide_types`, `journey`,
+  `resume`, `about` via `hide_sections`). Hidden sections are not built, so an unchecked link is a 404.
+- **Build in-site links from `view.prefix` or `view.site`**, never from the root, so the full site keeps
+  working under `/<full_site>/`.
 - **Free text from confidential entries goes through `safeText()`**, and company names through `displayCompany()`.
 - **Schema changes stay backward compatible** (optional or defaulted), so existing profiles keep building.
 - **Dates are UTC** (`fmtDate`) so a hard-coded date never shifts by timezone.

@@ -13,6 +13,7 @@ Built with [Astro](https://astro.build). No server or database; it deploys to Gi
 - **Skills pages:** every skill links to the work that proves it
 - **Journey and résumé:** built from one file per job, with per-persona bullet points
 - **Confidential clients:** show, mask or hide employer names across the whole site
+- **Secret share links:** a separate single-role site per application, while you keep the full version
 - **Content validation:** a typo in front matter fails the build instead of breaking the live site
 - **Reusable:** everything personal lives in one `profile/` folder
 
@@ -37,6 +38,9 @@ Nothing outside that folder needs to change. The [setup guide](docs/setup-and-de
 | --- | --- |
 | [Setup & deploy](docs/setup-and-deploy.md) | start a new profile, run locally, publish, share links, host several people |
 | [Writing content](docs/writing-content.md) | add a project, debug story, article, TIL or job |
+| [Tailoring for each role](docs/tailoring-for-roles.md) | make each role look right: tabs, jobs, skills, links (no coding needed) |
+| [Sharing role sites](docs/sharing.md) | give each recruiter a secret link that shows only one role |
 | [Profile reference](docs/profile-reference.md) | look up any setting or front-matter field |
 | [Maintaining the engine](docs/maintaining-the-engine.md) | change layouts, styles or pages, or understand the build |
 | [Troubleshooting](docs/troubleshooting.md) | fix a failed build or missing content |
+| [What's new](docs/whats-new.md) | see recent changes in plain language |

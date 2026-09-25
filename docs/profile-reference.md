@@ -35,16 +35,17 @@ Every setting a profile can contain. A profile is one folder (default `profile/`
 | `show_untagged` | no | `false` | Show entries that have no `roles:` in every persona. |
 | `confidential_mode` | no | `mask` | `show` \| `mask` \| `hide`. See [writing-content.md](writing-content.md#confidential-employers-and-clients). |
 | `name` | yes | — | Header, page titles, résumé, generated favicon initials. |
-| `tagline` | no | — | Subtitle on About; headline of the "Everything" view. |
-| `location` | no | — | Home page pill, About, résumé. |
-| `avatar` | no | — | Path inside `public/`, e.g. `/me.jpg`. Home hero and About. |
-| `email` | no | — | "Get in touch" / "Email me" buttons, About, résumé. Blank hides them. |
-| `availability` | no | — | Status pill on the home page; fallback for "Currently" on About. |
-| `links` | no | `[]` | List of `{ label, url }`. Footer, About, résumé; the first two also on the home page. |
+| `tagline` | no | — | Subtitle on About me and the landing page; headline of the "Everything" view. |
+| `location` | no | — | Home page pill, About me, résumé, landing page. |
+| `avatar` | no | — | Path inside `public/`, e.g. `/me.jpg`. Home, About me, landing page. |
+| `email` | no | — | "Get in touch" / "Email me" buttons, About me, résumé, landing page. Blank hides them. |
+| `availability` | no | — | Status pill on the home page; fallback for "Currently" on About me. |
+| `links` | no | `[]` | List of `{ label, url }`, as many as you like (GitHub, LinkedIn, HackerRank…). Footer, About me, résumé, landing page; the first two also in the home page contact box. |
 | `career_start` | no | — | `YYYY-MM-DD`. Drives the "N+ years in software" stat. |
 | `site_url` | no | — | Full origin for local builds, e.g. `https://you.github.io`. Overridden by `SITE` in CI. |
 | `base_path` | no | `/` | URL path the site lives under, e.g. `/know-me`. Overridden by `BASE_PATH` in CI. Use `/` for a custom domain or Cloudflare/Netlify. |
 | `text` | no | `{}` | Overrides for headings and blurbs. See below. |
+| `share_links` | no | off | `{ enabled, full_site }`. Builds secret single-role sites and moves the full site to `/<full_site>/`. See [sharing.md](sharing.md). |
 
 ## Page text overrides (`text:`)
 
@@ -89,8 +90,10 @@ summary: >                   # home hero paragraph and résumé summary
 skills_highlight: [test-strategy, playwright, ci-cd]   # home "Skills" block, résumé "Core skills", outlined on /skills/
 content_priority: [debug, project, post, til]          # order of sections on the home page and skill pages
 hide_types: []               # content types to hide for this persona, e.g. [debug] removes the Debug Diary
+hide_sections: []            # pages to leave out for this persona: journey | resume | about
 resume_pdf: ""               # e.g. /resumes/qa.pdf in public/. Blank = "Print / Save as PDF" button
 cta: Open to SDET and QA Lead roles   # home call-to-action heading and About "Currently"
+link: qa-e5f6g7h8            # secret path of this role's share site (only with share_links enabled)
 ```
 
 | Key | Required | Default |
@@ -101,7 +104,9 @@ cta: Open to SDET and QA Lead roles   # home call-to-action heading and About "C
 | `skills_highlight` | no | `[]` |
 | `content_priority` | no | `[project, debug, post, til]` |
 | `hide_types` | no | `[]` |
+| `hide_sections` | no | `[]`. Allowed: `journey`, `resume`, `about`. The tab, page and every link to it disappear for that persona, and the role dropdown sends you to that persona's home instead. On a share site, the page simply doesn't exist. |
 | `resume_pdf`, `cta` | no | `""` |
+| `link` | no | `""` (no share site) |
 
 **Adding a persona:** copy a role file, change `id`, `label`, the text and the colour, add the id to
 `roles_enabled`, then tag content with `roles: [<id>]`.
@@ -167,12 +172,14 @@ The build warns when a role's `skills_highlight` names a skill that no content u
 | `summary` | string | no | |
 | `highlights` | list | no | Each item is a string (all personas) or `{ text, roles: [...] }`. |
 | `company_alias`, `confidential` | | no | As above. |
+| `per_role` | map | no | `{ <role id>: { title, company, company_alias, location, start, end, summary, skills, description } }`. Overrides for one persona; omitted fields keep the base value. `description` (Markdown) replaces the body. Unknown roles or fields fail the build. |
 
 The body (optional Markdown) is shown on the Journey page.
 
 ## Front matter: pages
 
 `content/pages/about.md` takes just `title:`. The body is free Markdown.
+`content/pages/about-<role id>.md` (optional) replaces it on that role's views and share site.
 
 ## public/
 

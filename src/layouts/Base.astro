@@ -5,7 +5,7 @@ import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
 import fs from 'node:fs';
 import { profilePath } from '../lib/load-config.mjs';
-import { cfg, switchableRoles, activeRole, u, initials, type View } from '../lib/site';
+import { cfg, switchableRoles, activeRole, u, initials, sharing, hasSection, type View } from '../lib/site';
 
 interface Props {
   view: View;
@@ -15,24 +15,33 @@ interface Props {
   path: string;
   /** canonical, role-free path for SEO (defaults to path) */
   canonicalPath?: string;
+  /** no navigation, persona or role mention — the neutral landing / 404 page when sharing */
+  bare?: boolean;
 }
-const { view, title, description, path, canonicalPath } = Astro.props;
+const { view, title, description, path, canonicalPath, bare = false } = Astro.props;
 const role = view.role;
-const pageTitle = title ? `${title} · ${cfg.name}` : `${cfg.name} — ${role.label}`;
-const desc = description ?? role.headline;
+const pageTitle = bare ? (title ? `${title} · ${cfg.name}` : cfg.name) : title ? `${title} · ${cfg.name}` : `${cfg.name} — ${role.label}`;
+const desc = description ?? (bare ? cfg.tagline : role.headline);
+// Share sites and the full site are unlisted: only people given the link should find them
+const unlisted = sharing;
+// Single-role sites and the landing page never show the persona switcher or other roles
+const showPersonas = !bare && !view.focus;
 const canonical = new URL(u(canonicalPath ?? path), Astro.site);
 
 const nav = [
+  { label: 'Home', section: '' },
   { label: 'Projects', section: 'projects' },
-  { label: 'Debug Diary', section: 'debug', type: 'debug' },
+  { label: 'Debug Diary', section: 'debug' },
   { label: 'Blog', section: 'blog' },
   { label: 'Skills', section: 'skills' },
   { label: 'Journey', section: 'journey' },
   { label: 'Resume', section: 'resume' },
-  { label: 'About', section: 'about' },
-].filter((n) => !n.type || !role.hide_types.includes(n.type as any));
+  { label: 'About me', section: 'about' },
+].filter((n) => !n.section || hasSection(role, n.section));
 
 const current = path.split('/')[0];
+// Switching persona keeps you on the same page, unless that persona hides this section
+const switchPath = (r: typeof role) => (hasSection(r, current) ? path : '');
 // The profile's own favicon if it has one, else one generated from the initials
 const favicon = fs.existsSync(profilePath('public', 'favicon.svg')) ? 'favicon.svg' : 'icon.svg';
 ---
@@ -49,6 +58,8 @@ const favicon = fs.existsSync(profilePath('public', 'favicon.svg')) ? 'favicon.s
   <meta property="og:type" content="website" />
   <meta property="og:url" content={canonical} />
   <meta name="theme-color" content={role.accent} />
+  {unlisted && <meta name="robots" content="noindex, nofollow" />}
+  {unlisted && <meta name="referrer" content="no-referrer" />}
   <link rel="icon" href={u(favicon)} type="image/svg+xml" />
   <script is:inline>
     try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
@@ -61,13 +72,15 @@ const favicon = fs.existsSync(profilePath('public', 'favicon.svg')) ? 'favicon.s
         <span class="brand-mark">{initials}</span>
         <span class="brand-name">{cfg.name}</span>
       </a>
-      <nav class="nav" id="nav" aria-label="Main">
-        {nav.map((n) => (
-          <a href={u(view.prefix + n.section + '/')} aria-current={current === n.section ? 'page' : undefined}>{n.label}</a>
-        ))}
-      </nav>
+      {!bare && (
+        <nav class="nav" id="nav" aria-label="Main">
+          {nav.map((n) => (
+            <a href={u(view.prefix + (n.section ? n.section + '/' : ''))} aria-current={current === n.section ? 'page' : undefined}>{n.label}</a>
+          ))}
+        </nav>
+      )}
       <div class="header-tools">
-        <details class="persona">
+        {showPersonas && <details class="persona">
           <summary title="Switch the persona this site is tailored to">
             <span class="dot"></span><span class="persona-label">{role.label}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
@@ -75,19 +88,19 @@ const favicon = fs.existsSync(profilePath('public', 'favicon.svg')) ? 'favicon.s
           <div class="persona-menu">
             <div class="hint">View this site as</div>
             {switchableRoles.map((r) => (
-              <a href={u(`r/${r.id}/` + path)} aria-current={r.id === role.id ? 'true' : undefined} style={`--accent:${r.accent}`}>
+              <a href={u(`${view.site}r/${r.id}/` + switchPath(r))} aria-current={r.id === role.id ? 'true' : undefined} style={`--accent:${r.accent}`}>
                 <span class="dot"></span>{r.label}
                 {r.id === activeRole.id && <small>default</small>}
               </a>
             ))}
           </div>
-        </details>
+        </details>}
         <button class="icon-btn" id="theme" aria-label="Toggle light/dark theme">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </button>
-        <button class="icon-btn menu-toggle" id="menu" aria-label="Menu" aria-controls="nav" aria-expanded="false">
+        {!bare && <button class="icon-btn menu-toggle" id="menu" aria-label="Menu" aria-controls="nav" aria-expanded="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
+        </button>}
       </div>
     </div>
   </header>
@@ -96,7 +109,7 @@ const favicon = fs.existsSync(profilePath('public', 'favicon.svg')) ? 'favicon.s
 
   <footer class="site-footer">
     <div class="wrap">
-      <span>© {new Date().getFullYear()} {cfg.name} · Viewing as <b style="color:var(--accent)">{role.label}</b></span>
+      <span>© {new Date().getFullYear()} {cfg.name}{showPersonas && <> · Viewing as <b style="color:var(--accent)">{role.label}</b></>}</span>
       <span>
         {cfg.links.map((l: any) => <a href={l.url} rel="me noopener" target="_blank">{l.label}</a>)}
       </span>

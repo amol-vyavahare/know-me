@@ -55,3 +55,13 @@ base_path: /know-me
 #       journey_lead, about_title, not_found_title, not_found_lead
 text:
   home_cta_text: Happy to talk about backend systems, data pipelines, or a bug you can't pin down.
+
+# ── Share links (optional) ───────────────────────────────────
+# Secret single-role sites to put on résumés. When enabled:
+#   /                  → neutral page (name + contact only, no roles)
+#   /<full_site>/      → this full site with the role dropdown (for you)
+#   /<role link>/      → one role only; set `link:` in each roles/*.yaml
+# Every page becomes unlisted (noindex). See docs/sharing.md, and keep the repo PRIVATE.
+# share_links:
+#   enabled: true
+#   full_site: me-change-this-1234

@@ -1,0 +1,40 @@
+---
+/**
+ * The site root when share_links is on: who you are and how to reach you, nothing else.
+ * It never lists roles or links. In `npm run dev` it also shows every site for convenience.
+ */
+import { cfg, u, fullSite, shareRoles, activeRole } from '../lib/site';
+
+const email = cfg.email ? `mailto:${cfg.email}` : undefined;
+const devLinks = import.meta.env.DEV
+  ? [
+      ...(fullSite ? [{ label: 'Full site (all roles)', href: u(fullSite), accent: activeRole.accent }] : []),
+      ...shareRoles.map((r) => ({ label: r.label, href: u(`${r.link}/`), accent: r.accent })),
+    ]
+  : [];
+---
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      {cfg.location && <div class="hero-meta"><span class="pill">📍 {cfg.location}</span></div>}
+      <h1>{cfg.name}</h1>
+      {cfg.tagline && <p class="lead">{cfg.tagline}</p>}
+      <div class="btn-row">
+        {email && <a class="btn primary" href={email}>Get in touch</a>}
+        {cfg.links.map((l: any) => <a class="btn" href={l.url} target="_blank" rel="noopener">{l.label}</a>)}
+      </div>
+    </div>
+    {cfg.avatar && <img class="avatar" src={u(cfg.avatar)} alt={cfg.name} width="220" height="220" />}
+  </div>
+</section>
+
+{devLinks.length > 0 && (
+  <div class="wrap" style="margin-bottom:72px">
+    <div class="aside-box">
+      <h4>Dev only: your sites (never shown on the live site)</h4>
+      <div class="skills">
+        {devLinks.map((l) => <a class="skill" href={l.href} style={`--accent:${l.accent}`}>{l.label}<small>{l.href}</small></a>)}
+      </div>
+    </div>
+  </div>
+)}

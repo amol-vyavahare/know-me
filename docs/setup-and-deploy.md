@@ -6,7 +6,7 @@ This guide takes a new person from an empty clone to a live site.
 - [2. Create your profile](#2-create-your-profile)
 - [3. Run it locally](#3-run-it-locally)
 - [4. Publish](#4-publish)
-- [5. Links the site produces](#5-links-the-site-produces)
+- [5. Links the site produces](#5-links-the-site-produces) (and [secret per-role links](sharing.md))
 - [6. Several people in one repo](#6-several-people-in-one-repo)
 - [7. Updating the engine later](#7-updating-the-engine-later)
 
@@ -118,6 +118,9 @@ All paths are under the base path (e.g. `https://<username>.github.io/know-me/`)
 | `/r/<role>/resume/` | The résumé tailored to that persona, with Print / Save as PDF |
 | `/r/all/…` | The unfiltered "Everything" view (if `all_view` is enabled) |
 | `/content-index.json` | Machine-readable index of all public content, for a future chatbot |
+
+To give recruiters a link that shows **only** one role, with no way to reach the others, turn on share links.
+That moves the whole table above under a secret path. See [sharing.md](sharing.md).
 
 ## 6. Several people in one repo
 

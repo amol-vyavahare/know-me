@@ -1,6 +1,6 @@
 ---
 import { render } from 'astro:content';
-import { experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, skillId, skillUrl, t, type View } from '../lib/site';
+import { experienceFor, highlightsFor, displayCompany, fmtDate, itemsFor, itemUrl, safeText, prettyTag, skillId, skillUrl, t, renderMarkdown, type View, type JobData } from '../lib/site';
 
 interface Props { view: View }
 const { view } = Astro.props;
@@ -10,9 +10,12 @@ const items = await itemsFor(role);
 
 const entries = await Promise.all(jobs.map(async (j) => {
   const { Content } = await render(j);
+  // A per_role `description` replaces the file's Markdown body for this persona
+  const d = j.data as JobData;
+  const description = d.description ? await renderMarkdown(safeText(d.description, d)) : undefined;
   const end = j.data.end ?? new Date();
   const written = items.filter((i) => i.data.date >= j.data.start && i.data.date <= end).slice(0, 4);
-  return { j, Content, written, highlights: highlightsFor(j, role) };
+  return { j, Content, description, written, highlights: highlightsFor(j, role) };
 }));
 ---
 <div class="wrap">
@@ -23,7 +26,7 @@ const entries = await Promise.all(jobs.map(async (j) => {
   </header>
 
   <div class="timeline">
-    {entries.map(({ j, Content, written, highlights }) => (
+    {entries.map(({ j, Content, description, written, highlights }) => (
       <article class="tl-item" id={j.id}>
         <div class="tl-when">{fmtDate(j.data.start, 'short')} — {j.data.end ? fmtDate(j.data.end, 'short') : 'Present'}</div>
         <h3>{j.data.title}</h3>
@@ -31,7 +34,9 @@ const entries = await Promise.all(jobs.map(async (j) => {
         <div class="tl-card">
           {j.data.summary && <p style="margin-top:0">{safeText(j.data.summary, j.data)}</p>}
           {highlights.length > 0 && <ul>{highlights.map((h) => <li>{h}</li>)}</ul>}
-          <div class="prose" style="font-size:15px"><Content /></div>
+          {description
+            ? <div class="prose" style="font-size:15px" set:html={description} />
+            : <div class="prose" style="font-size:15px"><Content /></div>}
           {j.data.skills.length > 0 && (
             <div class="card-foot" style="margin-top:12px">{j.data.skills.map((s) => {
               const id = skillId(s);

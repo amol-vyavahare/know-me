@@ -9,5 +9,7 @@ summary: >
 skills_highlight: [ci-cd, kubernetes, terraform, aws, observability, docker]
 content_priority: [project, debug, post, til]
 hide_types: []
+hide_sections: []           # journey | resume | about — pages to leave out for this role
 resume_pdf: ""
+# link: devops-kemcqkwd         # secret path of this role's share site (see share_links in site.config.yaml)
 cta: Open to DevOps, SRE and Platform roles

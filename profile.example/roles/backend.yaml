@@ -10,5 +10,7 @@ skills_highlight: [go, api-design, postgres, caching]
 # Order of sections on the home page. Types: debug | project | post | til
 content_priority: [project, debug, post, til]
 hide_types: []
+hide_sections: []           # journey | resume | about — pages to leave out for this role
 resume_pdf: ""               # e.g. /resumes/backend.pdf (inside public/) — blank = "Print / Save as PDF"
+# link: backend-change-this-1234         # secret path of this role's share site (see share_links in site.config.yaml)
 cta: Open to senior backend roles

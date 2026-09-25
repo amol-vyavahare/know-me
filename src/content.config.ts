@@ -53,6 +53,22 @@ const highlight = z.union([
   z.object({ text: z.string(), roles: z.array(role).default(['all']) }),
 ]);
 
+/**
+ * What one persona sees differently for a job. Any field left out keeps the job's base value.
+ * `description` (Markdown) replaces the file's body; `end:` left blank means "Present".
+ */
+const jobOverride = z.object({
+  title: z.string(),
+  company: z.string(),
+  company_alias: z.string(),
+  location: z.string(),
+  start: z.coerce.date(),
+  end: optDate,
+  summary: z.string(),
+  skills: z.array(z.string()),
+  description: z.string(),
+}).partial().strict();
+
 /** One file per job — drives the Journey timeline and the Resume. */
 const experience = defineCollection({
   loader: glob({ pattern: '*.md', base: contentDir('experience') }),
@@ -67,6 +83,12 @@ const experience = defineCollection({
     highlights: z.array(highlight).default([]),
     ...confidential,
     company: z.string(),
+    // per_role: { <role id>: { title, company, start, end, summary, skills, description, … } }
+    per_role: z.record(z.string(), jobOverride).default({}).superRefine((m, ctx) => {
+      for (const k of Object.keys(m)) {
+        if (!knownRoles.includes(k)) ctx.addIssue({ code: 'custom', message: `Unknown role "${k}" in per_role. Use one of: ${knownRoles.join(', ')}` });
+      }
+    }),
   }),
 });
 

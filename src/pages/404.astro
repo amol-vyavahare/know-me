@@ -1,10 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
-import { allViews, u, t } from '../lib/site';
-const view = allViews()[0];
+import { allViews, u, t, sharing, landingView } from '../lib/site';
+// When sharing, the 404 must not link into any site (it would reveal a secret path)
+const view = sharing ? landingView : allViews()[0];
 const [first, ...rest] = t('not_found_title', view.role).split(' ');
 ---
-<Base view={view} title="Not found" path="">
+<Base view={view} title="Not found" path="" bare={sharing}>
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">404 · Page not found</span>

@@ -2,10 +2,19 @@
  * /content-index.json — every public section of every item, chunked by `##` heading.
  * This is the feed the future RAG chatbot will embed. Private, draft and hidden
  * confidential entries are never included; masked names stay masked.
+ *
+ * It lists every role, so it only exists on the full site: /content-index.json normally,
+ * /<full_site>/content-index.json with share_links on, and never on a single-role share site.
  */
-import type { APIRoute } from 'astro';
+import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
-import { cfg, publicItems, itemPath, u, safeText, displayCompany, highlightsFor, getRole, experienceFor } from '../lib/site';
+import {
+  cfg, publicItems, itemPath, u, safeText, displayCompany, highlightsFor, getRole, experienceFor, fullSite, activeRole, hasSection,
+  type JobData,
+} from '../../lib/site';
+
+export const getStaticPaths: GetStaticPaths = () =>
+  fullSite === null ? [] : [{ params: { site: fullSite.replace(/\/$/, '') || undefined } }];
 
 function chunk(body: string) {
   const out: { heading: string; text: string }[] = [];
@@ -21,7 +30,7 @@ function chunk(body: string) {
 }
 
 export const GET: APIRoute = async ({ site }) => {
-  const abs = (p: string) => new URL(u(p), site).toString();
+  const abs = (p: string) => new URL(u((fullSite ?? '') + p), site).toString();
   const records: Record<string, unknown>[] = [];
 
   for (const item of await publicItems()) {
@@ -35,18 +44,21 @@ export const GET: APIRoute = async ({ site }) => {
   }
 
   const all = getRole('all');
+  // The default persona may hide Journey; fall back to the Everything view's, else no link
+  const journeyUrl = (id: string) =>
+    hasSection(activeRole, 'journey') ? abs(`journey/#${id}`) : cfg.all_view ? abs(`r/all/journey/#${id}`) : null;
   for (const job of await experienceFor(all)) {
     const d = job.data;
     records.push({
-      id: `experience/${job.id}`, url: abs(`journey/#${job.id}`), type: 'experience', title: d.title,
+      id: `experience/${job.id}`, url: journeyUrl(job.id), type: 'experience', title: d.title,
       company: displayCompany(d), date: d.start.toISOString().slice(0, 10),
       end: d.end ? d.end.toISOString().slice(0, 10) : null, roles: d.roles, tags: d.skills,
-      heading: 'Role', text: [safeText(d.summary, d), ...highlightsFor(job, all), safeText(job.body, d)].filter(Boolean).join('\n'),
+      heading: 'Role', text: [safeText(d.summary, d), ...highlightsFor(job, all), safeText((d as JobData).description ?? job.body, d)].filter(Boolean).join('\n'),
     });
   }
 
   const about = (await getCollection('pages')).find((p) => p.id === 'about');
-  if (about) records.push({ id: 'about', url: abs('about/'), type: 'about', title: about.data.title, heading: 'About', text: about.body });
+  if (about) records.push({ id: 'about', url: hasSection(activeRole, 'about') ? abs('about/') : null, type: 'about', title: about.data.title, heading: 'About', text: about.body });
 
   return new Response(JSON.stringify({
     generated: new Date().toISOString(),

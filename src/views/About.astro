@@ -4,12 +4,13 @@ import { cfg, u, t, type View } from '../lib/site';
 
 interface Props { view: View }
 const { view } = Astro.props;
-const page = await getEntry('pages', 'about');
+// pages/about-<role>.md, if present, replaces pages/about.md for that role
+const page = (await getEntry('pages', `about-${view.role.id}`)) ?? (await getEntry('pages', 'about'));
 const rendered = page ? await render(page) : null;
 ---
 <div class="wrap">
   <header class="page-head">
-    <span class="eyebrow">About</span>
+    <span class="eyebrow">About me</span>
     <h1>{page?.data.title ?? t('about_title', view.role)}</h1>
     <p>{cfg.tagline}</p>
   </header>

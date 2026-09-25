@@ -33,6 +33,8 @@ export function loadSiteConfig() {
   }
   // all_view: true | false | { label, summary, accent }
   const all = raw.all_view ?? true;
+  // share_links: secret per-role sites (see docs/sharing.md)
+  const share = raw.share_links ?? {};
   return {
     roles_enabled: [],
     show_untagged: false,
@@ -41,6 +43,7 @@ export function loadSiteConfig() {
     text: {},
     ...raw,
     all_view: all === false ? false : { ...(typeof all === 'object' ? all : {}) },
+    share_links: { enabled: share.enabled === true, full_site: String(share.full_site ?? '').trim() },
   };
 }
 
@@ -57,9 +60,11 @@ export function loadRoles() {
       skills_highlight: [],
       content_priority: ['project', 'debug', 'post', 'til'],
       hide_types: [],
+      hide_sections: [],
       resume_pdf: '',
       cta: '',
       ...r,
+      link: String(r.link ?? '').trim(), // secret path of this role's share site
     };
   }
   return roles;

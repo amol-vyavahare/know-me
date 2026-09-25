@@ -2,7 +2,7 @@
 import ItemCard from '../components/ItemCard.astro';
 import ItemRow from '../components/ItemRow.astro';
 import {
-  cfg, skillsFor, skillCatalog, itemSkillIds, skillUrl, viewUrl, displayCompany, fmtDate, TYPE_META, u, skillPath,
+  cfg, skillsFor, skillCatalog, itemSkillIds, skillUrl, viewUrl, displayCompany, fmtDate, TYPE_META, u, skillPath, hasSection,
   type View,
 } from '../lib/site';
 
@@ -36,6 +36,8 @@ const related = [...together.entries()]
   .filter(Boolean);
 
 const empty = skill.items.length === 0 && skill.jobs.length === 0;
+const hasJourney = hasSection(role, 'journey');
+const JobRow = hasJourney ? 'a' : 'div';
 ---
 <div class="wrap">
   <header class="page-head">
@@ -47,7 +49,7 @@ const empty = skill.items.length === 0 && skill.jobs.length === 0;
   {empty && (
     <p class="muted" style="margin-bottom:72px">
       Nothing about {skill.label} in the {role.label} view yet.
-      {cfg.all_view && role.id !== 'all' && <> <a href={u('r/all/' + skillPath(id))}>See it across all roles →</a></>}
+      {cfg.all_view && role.id !== 'all' && !view.focus && <> <a href={u(view.site + 'r/all/' + skillPath(id))}>See it across all roles →</a></>}
     </p>
   )}
 
@@ -65,11 +67,11 @@ const empty = skill.items.length === 0 && skill.jobs.length === 0;
       <div class="section-head"><div><span class="eyebrow">Journey · where I used it</span></div></div>
       <div class="rows">
         {skill.jobs.map((j) => (
-          <a class="row" href={viewUrl(view, 'journey') + '#' + j.id}>
+          <JobRow class="row" href={hasJourney ? viewUrl(view, 'journey') + '#' + j.id : undefined}>
             <time>{fmtDate(j.data.start, 'short')}</time>
             <div><h3>{j.data.title}</h3><p>{displayCompany(j.data)}{j.data.location && ` · ${j.data.location}`}</p></div>
             <span class="tag">{j.data.end ? fmtDate(j.data.end, 'short') : 'Present'}</span>
-          </a>
+          </JobRow>
         ))}
       </div>
     </section>

@@ -14,7 +14,7 @@ const site = new URL(u(view.prefix), Astro.site).toString().replace(/^https?:\/\
     {role.resume_pdf
       ? <a class="btn primary" href={u(role.resume_pdf)} download>Download PDF</a>
       : <button class="btn primary" onclick="window.print()">Print / Save as PDF</button>}
-    <span class="pill">Tailored for <b style="color:var(--accent)">&nbsp;{role.label}</b></span>
+    {!view.focus && <span class="pill">Tailored for <b style="color:var(--accent)">&nbsp;{role.label}</b></span>}
   </div>
 
   <article class="resume">

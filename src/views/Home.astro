@@ -3,7 +3,7 @@ import ItemCard from '../components/ItemCard.astro';
 import ItemRow from '../components/ItemRow.astro';
 import {
   cfg, u, viewUrl, itemsFor, featuredFor, experienceFor, displayCompany, fmtDate,
-  yearsOfExperience, prettyTag, TYPE_META, skillsFor, skillId, skillUrl, t as text, type View, type ItemType,
+  yearsOfExperience, prettyTag, TYPE_META, skillsFor, skillId, skillUrl, hasSection, t as text, type View, type ItemType,
 } from '../lib/site';
 
 interface Props { view: View }
@@ -45,6 +45,9 @@ const sections = role.content_priority
   .filter((s) => s.items.length);
 
 const email = cfg.email ? `mailto:${cfg.email}` : undefined;
+// hide_sections: [journey] → job rows stay, but don't link to the (missing) Journey page
+const hasJourney = hasSection(role, 'journey');
+const JobRow = hasJourney ? 'a' : 'div';
 const [first, ...rest] = role.headline.split(' ');
 ---
 <section class="hero">
@@ -58,9 +61,9 @@ const [first, ...rest] = role.headline.split(' ');
       <h1><span class="hl">{first}</span> {rest.join(' ')}</h1>
       <p class="lead">{role.summary}</p>
       <div class="btn-row">
-        <a class="btn primary" href={viewUrl(view, 'resume')}>View {role.label} resume →</a>
+        {hasSection(role, 'resume') && <a class="btn primary" href={viewUrl(view, 'resume')}>View {role.label} resume →</a>}
         {email && <a class="btn" href={email}>Get in touch</a>}
-        <a class="btn" href={viewUrl(view, 'journey')}>My journey</a>
+        {hasJourney && <a class="btn" href={viewUrl(view, 'journey')}>My journey</a>}
       </div>
     </div>
     {cfg.avatar && <img class="avatar" src={u(cfg.avatar)} alt={cfg.name} width="220" height="220" />}
@@ -122,15 +125,15 @@ const [first, ...rest] = role.headline.split(' ');
     <div class="wrap">
       <div class="section-head">
         <div><span class="eyebrow">Journey</span><h2>{text('home_journey_title', role)}</h2></div>
-        <a href={viewUrl(view, 'journey')}>Full timeline →</a>
+        {hasJourney && <a href={viewUrl(view, 'journey')}>Full timeline →</a>}
       </div>
       <div class="rows">
         {jobs.slice(0, 4).map((j) => (
-          <a class="row" href={viewUrl(view, 'journey') + '#' + j.id}>
+          <JobRow class="row" href={hasJourney ? viewUrl(view, 'journey') + '#' + j.id : undefined}>
             <time>{fmtDate(j.data.start, 'short')}</time>
             <div><h3>{j.data.title}</h3><p>{displayCompany(j.data)}{j.data.location && ` · ${j.data.location}`}</p></div>
             <span class="tag">{j.data.end ? fmtDate(j.data.end, 'short') : 'Present'}</span>
-          </a>
+          </JobRow>
         ))}
       </div>
     </div>

@@ -112,7 +112,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; letter-spa
 
 .menu-toggle { display: none; }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .menu-toggle { display: grid; }
   .nav {
     display: none; position: absolute; top: 64px; left: 0; right: 0; flex-direction: column; padding: 10px 16px 16px;
